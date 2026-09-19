@@ -1,24 +1,28 @@
 # Rel2KG
 
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.12-3776AB?logo=python&logoColor=white)](pyproject.toml)
+[![Docker Compose](https://img.shields.io/badge/docker-compose%20v2-2496ED?logo=docker&logoColor=white)](docker-compose.yml)
+
 Relational tables first. Semantic web next.
 
-Three independently run campus systems store overlapping facts about the same people. This repo instantiates those systems with **Docker only** — nothing is installed on the host — so later work (R2RML / RDFS / SPARQL) has real heterogeneous sources to map.
+Three independently run campus systems store overlapping facts about the same people. This repository instantiates those systems with **Docker only** — nothing is installed on the host — so later work (R2RML / RDFS / SPARQL) has real heterogeneous sources to map.
 
-Apache-2.0.
+Apache-2.0. Status: lab / alpha.
 
 ## Why these three databases
 
 They are the three most widely used open-source relational engines, and they disagree just enough to be useful for integration:
 
-| Engine | Role in this lab | Why it is here |
+| Engine | Role in this lab | Image |
 | --- | --- | --- |
-| **PostgreSQL 16** | Campus HR (`campus`) | Default serious open-source server RDBMS. Official image: `postgres:16-alpine`. |
-| **MySQL 8.4** | Campus library (`library`) | Dominant open-source server RDBMS in production. Official image: `mysql:8.4`. |
-| **SQLite 3** | Campus registrar (`courses.db`) | Most widely deployed embedded RDBMS. Created inside the Python image onto a Docker volume — still no host install. |
+| **PostgreSQL 16** | Campus HR (`campus`) | `postgres:16-alpine` |
+| **MySQL 8.4** | Campus library (`library`) | `mysql:8.4` |
+| **SQLite 3** | Campus registrar (`courses.db`) | file on a Docker volume, created by the Python image |
 
 Same people, three schemas, three dialects. The join key today is email. Later it becomes an IRI.
 
-## Simple schemas
+## Schemas
 
 PostgreSQL — people:
 
@@ -49,39 +53,27 @@ flowchart LR
 
 ## Requirements
 
-- Docker Desktop (or another Docker Engine with Compose v2)
+- Docker Engine with Compose v2 (Docker Desktop is fine)
 - That is all. Python, drivers, and the databases run in images.
 
-## Instantiate
-
-From this directory:
+## Quick start
 
 ```bash
-docker compose up --build -d
-docker compose run --rm tools
+git clone <this-repo> rel2kg
+cd rel2kg
+make bootstrap
 ```
 
-The first command starts PostgreSQL and MySQL and loads their seed SQL (first run only, while the data volumes are empty). The second command creates the SQLite file on a volume and prints a status report from all three sources.
-
-Re-run the report any time:
+Equivalent Compose commands:
 
 ```bash
-docker compose run --rm tools python -m rel2kg verify
+docker compose up --build -d --wait postgres mysql
+docker compose run --rm --build tools
 ```
 
-Stop, keep data:
+That starts PostgreSQL and MySQL (seed SQL runs on the first empty volume), creates the SQLite file, and prints a status report. Re-run the report with `make verify`.
 
-```bash
-docker compose down
-```
-
-Stop and wipe volumes (re-seed from scratch on next up):
-
-```bash
-docker compose down -v
-```
-
-### Host ports
+### Host ports and credentials
 
 | Source | Host | Inside Compose |
 | --- | --- | --- |
@@ -89,7 +81,17 @@ docker compose down -v
 | MySQL | `localhost:3306` | `mysql:3306` |
 | SQLite | volume `sqlite_data` → `/data/courses.db` | same path in `tools` |
 
-Demo credentials (local lab only): user `rel2kg`, password `rel2kg`. Override with a `.env` copied from `.env.example` if 5432 or 3306 are already taken (`POSTGRES_HOST_PORT`, `MYSQL_HOST_PORT`).
+Lab credentials (see [SECURITY.md](SECURITY.md)): user `rel2kg`, password `rel2kg`. Copy `.env.example` to `.env` to change ports or passwords (`POSTGRES_HOST_PORT`, `MYSQL_HOST_PORT`).
+
+Inspect without installing clients:
+
+```bash
+docker compose exec postgres psql -U rel2kg -d campus
+docker compose exec mysql mysql -u rel2kg -prel2kg library
+docker compose run --rm --build --no-deps tools rel2kg verify
+```
+
+Stop and keep data: `make down`. Wipe and re-seed: `make reset`.
 
 ## Layout
 
@@ -99,25 +101,34 @@ docker/python.Dockerfile
 db/postgres/init.sql   HR schema + seed
 db/mysql/init.sql      library schema + seed
 db/sqlite/init.sql     registrar schema + seed
-src/rel2kg/            init SQLite, verify all three
+src/rel2kg/            CLI, connections, verify report
+tests/                 unit tests (run in Docker)
 ```
 
-## Push to GitHub
+## Makefile
 
-This directory is its own git repository. Create an empty GitHub repo named `rel2kg` (or anything you like), then:
+| Target | What it does |
+| --- | --- |
+| `make help` | List targets |
+| `make bootstrap` | Start DBs, seed SQLite, print the report |
+| `make verify` | Re-run the report |
+| `make test` | Unit tests in the tools image |
+| `make lint` | Compose validation + Ruff |
+| `make down` / `make reset` | Stop, or stop and delete volumes |
 
-```bash
-git remote add origin git@github.com:<your-username>/rel2kg.git
-git branch -M main
-git push -u origin main
-```
+## Troubleshooting
 
-If you still need a first commit:
+**Cannot connect to the Docker daemon** — start Docker Desktop (or your engine) and retry.
 
-```bash
-git add .
-git commit -m "Initial commit: PostgreSQL, MySQL, and SQLite sources"
-```
+**Port already allocated** — set `POSTGRES_HOST_PORT` / `MYSQL_HOST_PORT` in `.env`.
+
+**Empty or stale tables after editing SQL** — PostgreSQL and MySQL init scripts run only on an empty volume. `make reset` then `make bootstrap`.
+
+**SQLite report says the file is missing** — run `make bootstrap` once so the tools container can create `/data/courses.db`.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md). Please report vulnerabilities via [SECURITY.md](SECURITY.md), not a public issue.
 
 ## What is deliberately not here yet
 

@@ -13,7 +13,7 @@ def init_sqlite() -> None:
     SQLITE_PATH.parent.mkdir(parents=True, exist_ok=True)
     sql = sql_file.read_text(encoding="utf-8")
 
-    conn = sqlite3.connect(SQLITE_PATH)
+    conn = sqlite3.connect(SQLITE_PATH, timeout=30)
     try:
         conn.executescript(sql)
         conn.commit()

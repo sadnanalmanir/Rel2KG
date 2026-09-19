@@ -3,4 +3,9 @@
 *.sql text eol=lf
 *.py text eol=lf
 *.yml text eol=lf
+*.yaml text eol=lf
+*.toml text eol=lf
 *.md text eol=lf
+*.json text eol=lf
+Makefile text eol=lf
+LICENSE text eol=lf

@@ -1,12 +1,22 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
+from contextlib import ExitStack
+from typing import Any
 
 from rel2kg.config import MYSQL, POSTGRES, SQLITE_PATH
 from rel2kg.db import connect_mysql, connect_postgres, connect_sqlite, wait_for
+from rel2kg.expected import (
+    EXPECTED_ROW_COUNTS,
+    MYSQL_TABLES,
+    POSTGRES_TABLES,
+    SQLITE_TABLES,
+)
 
 
-def _count(cur, table: str) -> int:
+def _count(cur: Any, table: str, allowed: tuple[str, ...]) -> int:
+    if table not in allowed:
+        raise ValueError(f"refusing to count unknown table: {table}")
     cur.execute(f"SELECT COUNT(*) AS n FROM {table}")
     row = cur.fetchone()
     if isinstance(row, dict):
@@ -14,14 +24,14 @@ def _count(cur, table: str) -> int:
     return int(row[0])
 
 
-def _emails(cur, sql: str) -> set[str]:
+def _emails(cur: Any, sql: str) -> set[str]:
     cur.execute(sql)
     rows = cur.fetchall()
     out: set[str] = set()
     for row in rows:
         value = row["email"] if isinstance(row, dict) else row[0]
         if value:
-            out.add(value)
+            out.add(str(value))
     return out
 
 
@@ -37,41 +47,30 @@ def verify() -> int:
     print("=" * 40)
     print()
 
-    pg = wait_for("PostgreSQL", connect_postgres)
-    my = wait_for("MySQL", connect_mysql)
-    sl = wait_for("SQLite", connect_sqlite)
+    with ExitStack() as stack:
+        pg = wait_for("PostgreSQL", connect_postgres)
+        stack.callback(pg.close)
+        my = wait_for("MySQL", connect_mysql)
+        stack.callback(my.close)
+        sl = wait_for("SQLite", connect_sqlite)
+        stack.callback(sl.close)
 
-    try:
         with pg.cursor() as cur:
-            pg_counts = {
-                "department": _count(cur, "department"),
-                "employee": _count(cur, "employee"),
-            }
+            pg_counts = {name: _count(cur, name, POSTGRES_TABLES) for name in POSTGRES_TABLES}
             pg_emails = _emails(cur, "SELECT email FROM employee")
 
         with my.cursor() as cur:
-            my_counts = {
-                "author": _count(cur, "author"),
-                "book": _count(cur, "book"),
-                "loan": _count(cur, "loan"),
-            }
+            my_counts = {name: _count(cur, name, MYSQL_TABLES) for name in MYSQL_TABLES}
             author_emails = _emails(cur, "SELECT email FROM author WHERE email IS NOT NULL")
             loan_emails = _emails(cur, "SELECT borrower_email AS email FROM loan")
             my_emails = author_emails | loan_emails
 
         sl_cur = sl.cursor()
-        sl_counts = {
-            "course": _count(sl_cur, "course"),
-            "enrollment": _count(sl_cur, "enrollment"),
-        }
+        sl_counts = {name: _count(sl_cur, name, SQLITE_TABLES) for name in SQLITE_TABLES}
         sl_emails = _emails(sl_cur, "SELECT student_email AS email FROM enrollment")
-    finally:
-        pg.close()
-        my.close()
-        sl.close()
 
-    pg_label = f"{POSTGRES['dbname']} @ {POSTGRES['host']}:{POSTGRES['port']}"
-    my_label = f"{MYSQL['database']} @ {MYSQL['host']}:{MYSQL['port']}"
+    pg_label = f"{POSTGRES.dbname} @ {POSTGRES.host}:{POSTGRES.port}"
+    my_label = f"{MYSQL.database} @ {MYSQL.host}:{MYSQL.port}"
     sl_label = str(SQLITE_PATH)
 
     _print_table(
@@ -101,17 +100,8 @@ def verify() -> int:
         print(f"{email:<28} {hr:<5} {lib:<5} {reg}")
     print()
 
-    expected = {
-        "department": 3,
-        "employee": 5,
-        "author": 4,
-        "book": 4,
-        "loan": 4,
-        "course": 4,
-        "enrollment": 6,
-    }
     actual = {**pg_counts, **my_counts, **sl_counts}
-    mismatches = [name for name, n in expected.items() if actual.get(name) != n]
+    mismatches = [name for name, n in EXPECTED_ROW_COUNTS.items() if actual.get(name) != n]
     if mismatches:
         print("Row-count mismatches:", ", ".join(mismatches))
         return 1

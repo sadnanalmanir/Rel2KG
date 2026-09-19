@@ -1,5 +1,8 @@
 -- PostgreSQL 16 — campus HR (system of record for people)
--- Linking key used by the other databases: employee.email
+-- Cross-source identifier: employee.email
+-- Seed size: department 3, employee 5
+
+BEGIN;
 
 CREATE TABLE department (
     id    SMALLSERIAL PRIMARY KEY,
@@ -30,3 +33,5 @@ INSERT INTO employee (id, given_name, family_name, email, department_id, hired_o
 
 SELECT setval('department_id_seq', (SELECT MAX(id) FROM department));
 SELECT setval('employee_id_seq',   (SELECT MAX(id) FROM employee));
+
+COMMIT;

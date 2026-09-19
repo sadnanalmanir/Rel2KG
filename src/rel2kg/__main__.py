@@ -1,27 +1,40 @@
 from __future__ import annotations
 
+import argparse
 import sys
 
+from rel2kg import __version__
 from rel2kg.init_sqlite import init_sqlite
 from rel2kg.verify import verify
 
-USAGE = "usage: python -m rel2kg [bootstrap|init-sqlite|verify]"
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        prog="rel2kg",
+        description="Instantiate and verify the Rel2KG relational sources.",
+    )
+    parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
+    sub = parser.add_subparsers(dest="command")
+    sub.add_parser("bootstrap", help="create SQLite and verify all three sources")
+    sub.add_parser("init-sqlite", help="create and seed the SQLite registrar")
+    sub.add_parser("verify", help="check PostgreSQL, MySQL, and SQLite")
+    return parser
 
 
 def main(argv: list[str] | None = None) -> int:
-    args = argv if argv is not None else sys.argv[1:]
-    cmd = args[0] if args else "bootstrap"
+    args = build_parser().parse_args(argv)
+    command = args.command or "bootstrap"
 
-    if cmd == "init-sqlite":
+    if command == "init-sqlite":
         init_sqlite()
         return 0
-    if cmd == "verify":
+    if command == "verify":
         return verify()
-    if cmd == "bootstrap":
+    if command == "bootstrap":
         init_sqlite()
         return verify()
 
-    print(USAGE, file=sys.stderr)
+    build_parser().print_help(sys.stderr)
     return 2
 
 

@@ -1,13 +1,18 @@
 -- MySQL 8.4 — campus library
--- borrower_email / author.email overlap with PostgreSQL employee.email
+-- Cross-source identifier: author.email / loan.borrower_email
+-- Seed size: author 4, book 4, loan 4
 
+SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE library;
+
+START TRANSACTION;
 
 CREATE TABLE author (
     id         INT AUTO_INCREMENT PRIMARY KEY,
     full_name  VARCHAR(128) NOT NULL,
-    email      VARCHAR(128) NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    email      VARCHAR(128) NULL,
+    KEY author_email (email)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE book (
     id              INT AUTO_INCREMENT PRIMARY KEY,
@@ -16,7 +21,7 @@ CREATE TABLE book (
     published_year  INT NULL,
     author_id       INT NOT NULL,
     CONSTRAINT fk_book_author FOREIGN KEY (author_id) REFERENCES author (id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE loan (
     id              INT AUTO_INCREMENT PRIMARY KEY,
@@ -24,8 +29,9 @@ CREATE TABLE loan (
     book_id         INT NOT NULL,
     loaned_on       DATE NOT NULL,
     returned_on     DATE NULL,
+    KEY loan_borrower_email (borrower_email),
     CONSTRAINT fk_loan_book FOREIGN KEY (book_id) REFERENCES book (id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT INTO author (id, full_name, email) VALUES
     (1, 'Ada Lovelace',      'ada@campus.example'),
@@ -44,3 +50,5 @@ INSERT INTO loan (id, borrower_email, book_id, loaned_on, returned_on) VALUES
     (2, 'alan@campus.example',   4, '2026-03-03', NULL),
     (3, 'grace@campus.example',  3, '2026-01-12', '2026-01-28'),
     (4, 'edsger@campus.example', 1, '2026-03-10', NULL);
+
+COMMIT;

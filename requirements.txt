@@ -1,4 +1,0 @@
-# Installed inside the Python Docker image only. Nothing is installed on the host.
-psycopg2-binary==2.9.10
-PyMySQL==1.1.1
-cryptography==44.0.2

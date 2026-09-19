@@ -1,0 +1,25 @@
+name: Feature request
+description: A change or addition to Rel2KG
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What is missing or painful today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: What would you like to add or change?
+    validations:
+      required: true
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope
+      options:
+        - label: This stays inside the current lab (three relational sources, Docker only)
+        - label: This is a later semantic-web step (R2RML, SPARQL, ontology)

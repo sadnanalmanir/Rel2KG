@@ -1,5 +1,7 @@
 # Local env (copy from .env.example)
 .env
+.env.*
+!.env.example
 
 # Python
 .venv/
@@ -11,8 +13,11 @@ __pycache__/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+.coverage
+htmlcov/
 dist/
 build/
+*.egg
 
 # SQLite files created outside Docker volumes
 *.db
@@ -23,6 +28,12 @@ data/
 
 # OS / editors
 .DS_Store
+Thumbs.db
 .idea/
 .vscode/
 *.swp
+*.orig
+*~
+
+# Logs
+*.log

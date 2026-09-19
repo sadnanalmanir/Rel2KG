@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/ruff-action@v3
+      - uses: astral-sh/ruff-action@v3
+        with:
+          args: format --check
+
+  integration:
+    name: Databases and verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate Compose file
+        run: docker compose config --quiet
+      - name: Start PostgreSQL and MySQL
+        run: docker compose up --build -d --wait postgres mysql
+      - name: Unit tests
+        run: docker compose run --rm --build --no-deps tools python -m unittest discover -s /app/tests -v
+      - name: Bootstrap SQLite and verify all sources
+        run: docker compose run --rm --build tools
+      - name: Teardown
+        if: always()
+        run: docker compose down -v
