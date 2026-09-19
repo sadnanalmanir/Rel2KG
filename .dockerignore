@@ -1,0 +1,14 @@
+.git
+.github
+.gitignore
+.env
+.venv
+venv
+**/__pycache__
+**/*.pyc
+**/*.egg-info
+*.md
+LICENSE
+.DS_Store
+data
+*.db

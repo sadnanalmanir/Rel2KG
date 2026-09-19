@@ -1,0 +1,28 @@
+# Local env (copy from .env.example)
+.env
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+dist/
+build/
+
+# SQLite files created outside Docker volumes
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+data/
+
+# OS / editors
+.DS_Store
+.idea/
+.vscode/
+*.swp

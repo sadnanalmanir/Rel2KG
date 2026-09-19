@@ -1,0 +1,87 @@
+name: rel2kg
+
+# Three widely used open-source relational databases + a Python tools image.
+# Nothing is installed on the host. From this directory:
+#   docker compose up --build -d
+#   docker compose run --rm tools
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: rel2kg-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-rel2kg}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-rel2kg}
+      POSTGRES_DB: ${POSTGRES_DB:-campus}
+    ports:
+      - "${POSTGRES_HOST_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db/postgres/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-rel2kg} -d ${POSTGRES_DB:-campus}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+    restart: unless-stopped
+
+  mysql:
+    image: mysql:8.4
+    container_name: rel2kg-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rel2kg}
+      MYSQL_USER: ${MYSQL_USER:-rel2kg}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-rel2kg}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-library}
+    ports:
+      - "${MYSQL_HOST_PORT:-3306}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./db/mysql/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-prel2kg"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 25s
+    restart: unless-stopped
+
+  tools:
+    build:
+      context: .
+      dockerfile: docker/python.Dockerfile
+    container_name: rel2kg-tools
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_USER: ${POSTGRES_USER:-rel2kg}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-rel2kg}
+      POSTGRES_DB: ${POSTGRES_DB:-campus}
+      MYSQL_HOST: mysql
+      MYSQL_PORT: "3306"
+      MYSQL_USER: ${MYSQL_USER:-rel2kg}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-rel2kg}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-library}
+      SQLITE_PATH: /data/courses.db
+      SQL_DIR: /db
+    volumes:
+      - sqlite_data:/data
+      - ./db:/db:ro
+      - ./src:/app/src:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+    command: ["python", "-m", "rel2kg", "bootstrap"]
+    profiles:
+      - tools
+
+volumes:
+  postgres_data:
+  mysql_data:
+  sqlite_data:
