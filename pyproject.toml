@@ -4,13 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "rel2kg"
-version = "0.1.0"
-description = "Heterogeneous relational sources (PostgreSQL, MySQL, SQLite) for a later knowledge graph."
+version = "0.2.0"
+description = "Heterogeneous relational sources mapped to RDF with R2RML."
 readme = "README.md"
 license = { text = "Apache-2.0" }
 requires-python = ">=3.12"
 authors = [{ name = "Rel2KG contributors" }]
-keywords = ["semantic-web", "rdbms", "postgresql", "mysql", "sqlite", "docker"]
+keywords = ["semantic-web", "r2rml", "rdbms", "postgresql", "mysql", "sqlite", "docker"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "License :: OSI Approved :: Apache Software License",
@@ -21,7 +21,7 @@ classifiers = [
 dependencies = [
     "psycopg2-binary==2.9.10",
     "PyMySQL==1.1.1",
-    "cryptography==44.0.2",
+    "morph-kgc[postgresql,mysql,sqlite]==2.10.0",
 ]
 
 [project.scripts]

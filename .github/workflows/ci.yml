@@ -28,7 +28,7 @@ jobs:
   integration:
     name: Databases and verify
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - name: Validate Compose file
@@ -39,6 +39,8 @@ jobs:
         run: docker compose run --rm --build --no-deps tools python -m unittest discover -s /app/tests -v
       - name: Bootstrap SQLite and verify all sources
         run: docker compose run --rm --build tools
+      - name: Materialize R2RML mappings
+        run: docker compose run --rm --build tools rel2kg materialize
       - name: Teardown
         if: always()
         run: docker compose down -v

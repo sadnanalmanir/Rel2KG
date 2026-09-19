@@ -17,6 +17,11 @@ class TestMain(unittest.TestCase):
         args = build_parser().parse_args(["verify"])
         self.assertEqual(args.command, "verify")
 
+    def test_parser_accepts_materialize(self) -> None:
+        args = build_parser().parse_args(["materialize", "-o", "/tmp/kg.ttl"])
+        self.assertEqual(args.command, "materialize")
+        self.assertEqual(str(args.output), "/tmp/kg.ttl")
+
     def test_unknown_command_exits(self) -> None:
         with redirect_stderr(StringIO()), self.assertRaises(SystemExit) as cm:
             main(["nope"])

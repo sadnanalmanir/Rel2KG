@@ -1,0 +1,91 @@
+# R2RML — SQLite campus registrar
+# enrollment.student_email reuses the Person IRI minted from email.
+
+@prefix rr: <http://www.w3.org/ns/r2rml#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix schema: <https://schema.org/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix rel2kg: <https://rel2kg.example/vocab#> .
+
+<#Course>
+    rr:logicalTable [ rr:tableName "course" ] ;
+    rr:subjectMap [
+        rr:template "https://rel2kg.example/id/course/{code}" ;
+        rr:class rel2kg:Course ;
+        rr:class schema:Course
+    ] ;
+    rr:predicateObjectMap [
+        rr:predicate schema:name ;
+        rr:objectMap [ rr:column "title" ]
+    ] ;
+    rr:predicateObjectMap [
+        rr:predicate schema:courseCode ;
+        rr:objectMap [ rr:column "code" ]
+    ] ;
+    rr:predicateObjectMap [
+        rr:predicate rel2kg:credits ;
+        rr:objectMap [
+            rr:column "credits" ;
+            rr:datatype xsd:integer
+        ]
+    ] ;
+    rr:predicateObjectMap [
+        rr:predicate dcterms:source ;
+        rr:object <https://rel2kg.example/source/registrar>
+    ] .
+
+<#Student>
+    rr:logicalTable [ rr:sqlQuery """
+        SELECT DISTINCT student_email
+        FROM enrollment
+    """ ] ;
+    rr:subjectMap [
+        rr:template "https://rel2kg.example/id/person/{student_email}" ;
+        rr:class rel2kg:Person ;
+        rr:class foaf:Person ;
+        rr:class schema:Person
+    ] ;
+    rr:predicateObjectMap [
+        rr:predicate schema:email ;
+        rr:objectMap [ rr:column "student_email" ]
+    ] ;
+    rr:predicateObjectMap [
+        rr:predicate dcterms:source ;
+        rr:object <https://rel2kg.example/source/registrar>
+    ] .
+
+<#Enrollment>
+    rr:logicalTable [ rr:tableName "enrollment" ] ;
+    rr:subjectMap [
+        rr:template "https://rel2kg.example/id/enrollment/{id}" ;
+        rr:class rel2kg:Enrollment
+    ] ;
+    rr:predicateObjectMap [
+        rr:predicate rel2kg:student ;
+        rr:objectMap [
+            rr:template "https://rel2kg.example/id/person/{student_email}"
+        ]
+    ] ;
+    rr:predicateObjectMap [
+        rr:predicate rel2kg:course ;
+        rr:objectMap [
+            rr:parentTriplesMap <#Course> ;
+            rr:joinCondition [
+                rr:child "course_id" ;
+                rr:parent "id"
+            ]
+        ]
+    ] ;
+    rr:predicateObjectMap [
+        rr:predicate rel2kg:term ;
+        rr:objectMap [ rr:column "term" ]
+    ] ;
+    rr:predicateObjectMap [
+        rr:predicate rel2kg:grade ;
+        rr:objectMap [ rr:column "grade" ]
+    ] ;
+    rr:predicateObjectMap [
+        rr:predicate dcterms:source ;
+        rr:object <https://rel2kg.example/source/registrar>
+    ] .

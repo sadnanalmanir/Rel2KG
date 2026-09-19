@@ -77,9 +77,14 @@ services:
       MYSQL_DATABASE: ${MYSQL_DATABASE:-library}
       SQLITE_PATH: /data/courses.db
       SQL_DIR: /db
+      MAPPINGS_DIR: /app/mappings
+      VOCAB_PATH: /app/vocab/rel2kg.ttl
+      KG_OUTPUT: /data/kg.ttl
     volumes:
       - sqlite_data:/data
       - ./db:/db:ro
+      - ./mappings:/app/mappings:ro
+      - ./vocab:/app/vocab:ro
       - ./src:/app/src:ro
       - ./tests:/app/tests:ro
     depends_on:

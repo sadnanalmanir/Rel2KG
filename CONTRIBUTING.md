@@ -10,19 +10,20 @@ make test
 make bootstrap
 ```
 
-`make bootstrap` starts PostgreSQL and MySQL, creates the SQLite file, and prints a cross-source report. Re-run `make verify` after SQL or Python changes. If you change `db/postgres/init.sql` or `db/mysql/init.sql`, reset volumes first (`make reset`) — those scripts run only on an empty data directory.
+`make bootstrap` starts PostgreSQL and MySQL, creates the SQLite file, and prints a cross-source report. `make materialize` applies the R2RML mappings. Re-run `make verify` after SQL or Python changes, and `make materialize` after mapping or vocab changes. If you change `db/postgres/init.sql` or `db/mysql/init.sql`, reset volumes first (`make reset`) — those scripts run only on an empty data directory.
 
 ## Checks we expect on a PR
 
 1. `make test` — unit tests in the tools image.
 2. `make bootstrap` (or `make verify` if the databases are already seeded).
-3. `make lint` — Compose file plus Ruff.
+3. `make materialize` if you touched mappings, vocab, or seed data.
+4. `make lint` — Compose file plus Ruff.
 
 GitHub Actions runs the same checks on `main` and on pull requests.
 
 ## Scope
 
-This repository is the relational layer of a later semantic-web pipeline. Keep the three schemas small. Mapping to RDF (R2RML, RDFS/OWL, SPARQL) belongs in a follow-up change that does not replace these sources.
+Keep the three schemas small. Person identity is email, expressed as `https://rel2kg.example/id/person/{email}` in every mapping. SPARQL over a triple store is the next slice; do not replace Morph-KGC or the three databases.
 
 Read `AGENTS.md` before changing locked decisions (which databases, Docker-only, email as the join key).
 

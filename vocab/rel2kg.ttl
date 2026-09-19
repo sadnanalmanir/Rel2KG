@@ -1,0 +1,99 @@
+@prefix rel2kg: <https://rel2kg.example/vocab#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix schema: <https://schema.org/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<https://rel2kg.example/vocab> a owl:Ontology ;
+    dcterms:title "Rel2KG campus vocabulary" ;
+    dcterms:description "Small target vocabulary for the three Rel2KG relational sources." ;
+    dcterms:license <https://www.apache.org/licenses/LICENSE-2.0> .
+
+rel2kg:Person a rdfs:Class ;
+    rdfs:label "Person" ;
+    rdfs:comment "A campus person. The identifying key across sources is email." ;
+    rdfs:subClassOf foaf:Person, schema:Person .
+
+rel2kg:Department a rdfs:Class ;
+    rdfs:label "Department" ;
+    rdfs:subClassOf schema:Organization .
+
+rel2kg:Book a rdfs:Class ;
+    rdfs:label "Book" ;
+    rdfs:subClassOf schema:Book .
+
+rel2kg:Course a rdfs:Class ;
+    rdfs:label "Course" ;
+    rdfs:subClassOf schema:Course .
+
+rel2kg:Loan a rdfs:Class ;
+    rdfs:label "Loan" ;
+    rdfs:comment "A library loan of a book to a person." .
+
+rel2kg:Enrollment a rdfs:Class ;
+    rdfs:label "Enrollment" ;
+    rdfs:comment "A registrar enrollment of a person in a course for a term." .
+
+rel2kg:code a rdf:Property ;
+    rdfs:label "code" ;
+    rdfs:comment "Short institutional code for a department." ;
+    rdfs:domain rel2kg:Department ;
+    rdfs:range rdfs:Literal .
+
+rel2kg:memberOf a rdf:Property ;
+    rdfs:label "member of" ;
+    rdfs:domain rel2kg:Person ;
+    rdfs:range rel2kg:Department .
+
+rel2kg:hiredOn a rdf:Property ;
+    rdfs:label "hired on" ;
+    rdfs:domain rel2kg:Person ;
+    rdfs:range xsd:date .
+
+rel2kg:borrower a rdf:Property ;
+    rdfs:label "borrower" ;
+    rdfs:domain rel2kg:Loan ;
+    rdfs:range rel2kg:Person .
+
+rel2kg:borrowed a rdf:Property ;
+    rdfs:label "borrowed" ;
+    rdfs:domain rel2kg:Loan ;
+    rdfs:range rel2kg:Book .
+
+rel2kg:loanedOn a rdf:Property ;
+    rdfs:label "loaned on" ;
+    rdfs:domain rel2kg:Loan ;
+    rdfs:range xsd:date .
+
+rel2kg:returnedOn a rdf:Property ;
+    rdfs:label "returned on" ;
+    rdfs:domain rel2kg:Loan ;
+    rdfs:range xsd:date .
+
+rel2kg:student a rdf:Property ;
+    rdfs:label "student" ;
+    rdfs:domain rel2kg:Enrollment ;
+    rdfs:range rel2kg:Person .
+
+rel2kg:course a rdf:Property ;
+    rdfs:label "course" ;
+    rdfs:domain rel2kg:Enrollment ;
+    rdfs:range rel2kg:Course .
+
+rel2kg:term a rdf:Property ;
+    rdfs:label "term" ;
+    rdfs:domain rel2kg:Enrollment ;
+    rdfs:range rdfs:Literal .
+
+rel2kg:grade a rdf:Property ;
+    rdfs:label "grade" ;
+    rdfs:domain rel2kg:Enrollment ;
+    rdfs:range rdfs:Literal .
+
+rel2kg:credits a rdf:Property ;
+    rdfs:label "credits" ;
+    rdfs:domain rel2kg:Course ;
+    rdfs:range xsd:integer .

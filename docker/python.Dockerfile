@@ -11,6 +11,8 @@ WORKDIR /app
 COPY pyproject.toml README.md LICENSE ./
 COPY src ./src
 COPY tests ./tests
+COPY mappings ./mappings
+COPY vocab ./vocab
 
 RUN pip install --no-cache-dir -e .
 

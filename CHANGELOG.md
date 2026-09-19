@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-09-19
+
+### Added
+
+- W3C R2RML mappings for PostgreSQL, MySQL, and SQLite
+- Small RDFS vocabulary (`vocab/rel2kg.ttl`)
+- `rel2kg materialize` via Morph-KGC (Docker-only)
+- Cross-source Person IRIs keyed on email
+
 ## [0.1.0] - 2026-09-19
 
 ### Added

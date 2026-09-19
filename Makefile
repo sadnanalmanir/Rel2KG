@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help up bootstrap verify test lint config down reset
+.PHONY: help up bootstrap verify materialize kg test lint config down reset
 
 help: ## Show available targets
 	@awk 'BEGIN {FS = ":.*##"} /^[a-zA-Z_-]+:.*##/ {printf "  %-12s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -13,6 +13,12 @@ bootstrap: up ## Create SQLite and print a status report from all three sources
 
 verify: ## Re-run the three-database status report
 	docker compose run --rm --build tools rel2kg verify
+
+materialize: ## Apply R2RML mappings and write Turtle to the sqlite volume
+	docker compose run --rm --build tools rel2kg materialize
+
+kg: bootstrap ## Start sources, then materialize the knowledge graph
+	docker compose run --rm --build tools rel2kg materialize
 
 test: ## Unit tests inside the tools image
 	docker compose run --rm --build --no-deps tools python -m unittest discover -s /app/tests -v

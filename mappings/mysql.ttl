@@ -1,0 +1,122 @@
+# R2RML — MySQL campus library
+# author.email and loan.borrower_email reuse the Person IRI minted from email.
+
+@prefix rr: <http://www.w3.org/ns/r2rml#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix schema: <https://schema.org/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix rel2kg: <https://rel2kg.example/vocab#> .
+
+<#Author>
+    rr:logicalTable [ rr:sqlQuery """
+        SELECT id,
+               full_name,
+               email,
+               CONCAT('mailto:', email) AS mbox
+        FROM author
+        WHERE email IS NOT NULL
+    """ ] ;
+    rr:subjectMap [
+        rr:template "https://rel2kg.example/id/person/{email}" ;
+        rr:class rel2kg:Person ;
+        rr:class foaf:Person ;
+        rr:class schema:Person
+    ] ;
+    rr:predicateObjectMap [
+        rr:predicate foaf:name ;
+        rr:objectMap [ rr:column "full_name" ]
+    ] ;
+    rr:predicateObjectMap [
+        rr:predicate schema:email ;
+        rr:objectMap [ rr:column "email" ]
+    ] ;
+    rr:predicateObjectMap [
+        rr:predicate foaf:mbox ;
+        rr:objectMap [
+            rr:column "mbox" ;
+            rr:termType rr:IRI
+        ]
+    ] ;
+    rr:predicateObjectMap [
+        rr:predicate dcterms:source ;
+        rr:object <https://rel2kg.example/source/library>
+    ] .
+
+<#Book>
+    rr:logicalTable [ rr:tableName "book" ] ;
+    rr:subjectMap [
+        rr:template "https://rel2kg.example/id/book/{isbn}" ;
+        rr:class rel2kg:Book ;
+        rr:class schema:Book
+    ] ;
+    rr:predicateObjectMap [
+        rr:predicate schema:name ;
+        rr:objectMap [ rr:column "title" ]
+    ] ;
+    rr:predicateObjectMap [
+        rr:predicate schema:isbn ;
+        rr:objectMap [ rr:column "isbn" ]
+    ] ;
+    rr:predicateObjectMap [
+        rr:predicate schema:datePublished ;
+        rr:objectMap [
+            rr:column "published_year" ;
+            rr:datatype xsd:gYear
+        ]
+    ] ;
+    rr:predicateObjectMap [
+        rr:predicate schema:author ;
+        rr:objectMap [
+            rr:parentTriplesMap <#Author> ;
+            rr:joinCondition [
+                rr:child "author_id" ;
+                rr:parent "id"
+            ]
+        ]
+    ] ;
+    rr:predicateObjectMap [
+        rr:predicate dcterms:source ;
+        rr:object <https://rel2kg.example/source/library>
+    ] .
+
+<#Loan>
+    rr:logicalTable [ rr:tableName "loan" ] ;
+    rr:subjectMap [
+        rr:template "https://rel2kg.example/id/loan/{id}" ;
+        rr:class rel2kg:Loan
+    ] ;
+    rr:predicateObjectMap [
+        rr:predicate rel2kg:borrower ;
+        rr:objectMap [
+            rr:template "https://rel2kg.example/id/person/{borrower_email}"
+        ]
+    ] ;
+    rr:predicateObjectMap [
+        rr:predicate rel2kg:borrowed ;
+        rr:objectMap [
+            rr:parentTriplesMap <#Book> ;
+            rr:joinCondition [
+                rr:child "book_id" ;
+                rr:parent "id"
+            ]
+        ]
+    ] ;
+    rr:predicateObjectMap [
+        rr:predicate rel2kg:loanedOn ;
+        rr:objectMap [
+            rr:column "loaned_on" ;
+            rr:datatype xsd:date
+        ]
+    ] ;
+    rr:predicateObjectMap [
+        rr:predicate rel2kg:returnedOn ;
+        rr:objectMap [
+            rr:column "returned_on" ;
+            rr:datatype xsd:date
+        ]
+    ] ;
+    rr:predicateObjectMap [
+        rr:predicate dcterms:source ;
+        rr:object <https://rel2kg.example/source/library>
+    ] .

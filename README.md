@@ -4,9 +4,9 @@
 [![Python](https://img.shields.io/badge/python-3.12-3776AB?logo=python&logoColor=white)](pyproject.toml)
 [![Docker Compose](https://img.shields.io/badge/docker-compose%20v2-2496ED?logo=docker&logoColor=white)](docker-compose.yml)
 
-Relational tables first. Semantic web next.
+Relational tables, mapped to RDF with R2RML.
 
-Three independently run campus systems store overlapping facts about the same people. This repository instantiates those systems with **Docker only** — nothing is installed on the host — so later work (R2RML / RDFS / SPARQL) has real heterogeneous sources to map.
+Three independently run campus systems store overlapping facts about the same people. This repository instantiates those systems with **Docker only** — nothing is installed on the host — and maps them to a shared vocabulary. SPARQL over a triple store is the next slice.
 
 Apache-2.0. Status: lab / alpha.
 
@@ -20,7 +20,7 @@ They are the three most widely used open-source relational engines, and they dis
 | **MySQL 8.4** | Campus library (`library`) | `mysql:8.4` |
 | **SQLite 3** | Campus registrar (`courses.db`) | file on a Docker volume, created by the Python image |
 
-Same people, three schemas, three dialects. The join key today is email. Later it becomes an IRI.
+Same people, three schemas, three dialects. The join key is email, minted as `https://rel2kg.example/id/person/{email}` so the three sources describe one Person.
 
 ## Schemas
 
@@ -45,10 +45,12 @@ flowchart LR
   PG[(PostgreSQL campus HR)]
   MY[(MySQL library)]
   SL[(SQLite registrar)]
-  PY[Python tools container]
-  PY --> PG
-  PY --> MY
-  PY --> SL
+  MAP[R2RML mappings]
+  KG[RDF graph]
+  PG --> MAP
+  MY --> MAP
+  SL --> MAP
+  MAP --> KG
 ```
 
 ## Requirements
@@ -71,7 +73,13 @@ docker compose up --build -d --wait postgres mysql
 docker compose run --rm --build tools
 ```
 
-That starts PostgreSQL and MySQL (seed SQL runs on the first empty volume), creates the SQLite file, and prints a status report. Re-run the report with `make verify`.
+That starts PostgreSQL and MySQL (seed SQL runs on the first empty volume), creates the SQLite file, and prints a status report. Re-run the report with `make verify`. Apply the R2RML mappings:
+
+```bash
+make materialize
+```
+
+Or do both in one go: `make kg`. The Turtle graph is written to the `sqlite_data` volume at `/data/kg.ttl`.
 
 ### Host ports and credentials
 
@@ -101,7 +109,9 @@ docker/python.Dockerfile
 db/postgres/init.sql   HR schema + seed
 db/mysql/init.sql      library schema + seed
 db/sqlite/init.sql     registrar schema + seed
-src/rel2kg/            CLI, connections, verify report
+mappings/              R2RML Turtle, one file per database
+vocab/rel2kg.ttl       target RDFS vocabulary
+src/rel2kg/            CLI, connections, verify, materialize
 tests/                 unit tests (run in Docker)
 ```
 
@@ -112,6 +122,8 @@ tests/                 unit tests (run in Docker)
 | `make help` | List targets |
 | `make bootstrap` | Start DBs, seed SQLite, print the report |
 | `make verify` | Re-run the report |
+| `make materialize` | Apply R2RML mappings, write Turtle |
+| `make kg` | `bootstrap` then `materialize` |
 | `make test` | Unit tests in the tools image |
 | `make lint` | Compose validation + Ruff |
 | `make down` / `make reset` | Stop, or stop and delete volumes |
@@ -126,15 +138,26 @@ tests/                 unit tests (run in Docker)
 
 **SQLite report says the file is missing** — run `make bootstrap` once so the tools container can create `/data/courses.db`.
 
+**Materialize cannot reach a database** — wait for `make bootstrap` (or `docker compose up -d --wait postgres mysql`) before `make materialize`.
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md). Please report vulnerabilities via [SECURITY.md](SECURITY.md), not a public issue.
 
+## R2RML
+
+Each database has its own mapping in `mappings/`. All three mint the same Person IRI from email, so Ada Lovelace in HR, the library, and the registrar is one resource. Morph-KGC runs inside the tools image ([Arenas-Guerrero et al., 2024](https://doi.org/10.3233/SW-223135)).
+
+Inspect the graph without installing RDF tools on the host:
+
+```bash
+docker compose run --rm --no-deps tools python -c \
+  "from pathlib import Path; print(Path('/data/kg.ttl').read_text()[:1500])"
+```
+
 ## What is deliberately not here yet
 
-- R2RML / Direct Mapping
-- OWL / RDFS vocabulary
-- SPARQL or a triple store
+- SPARQL endpoint or a persistent triple store
 - A web UI
 
-The tables exist and overlap. Mapping them is the next step.
+The mappings produce a graph. Querying it is the next step.

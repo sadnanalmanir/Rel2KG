@@ -1,0 +1,87 @@
+# R2RML — PostgreSQL campus HR
+# Person IRIs are minted from email so they merge with MySQL and SQLite.
+
+@prefix rr: <http://www.w3.org/ns/r2rml#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix schema: <https://schema.org/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix rel2kg: <https://rel2kg.example/vocab#> .
+
+<#Department>
+    rr:logicalTable [ rr:tableName "department" ] ;
+    rr:subjectMap [
+        rr:template "https://rel2kg.example/id/department/{code}" ;
+        rr:class rel2kg:Department ;
+        rr:class schema:Organization
+    ] ;
+    rr:predicateObjectMap [
+        rr:predicate schema:name ;
+        rr:objectMap [ rr:column "name" ]
+    ] ;
+    rr:predicateObjectMap [
+        rr:predicate rel2kg:code ;
+        rr:objectMap [ rr:column "code" ]
+    ] ;
+    rr:predicateObjectMap [
+        rr:predicate dcterms:source ;
+        rr:object <https://rel2kg.example/source/hr>
+    ] .
+
+<#Employee>
+    rr:logicalTable [ rr:sqlQuery """
+        SELECT id,
+               given_name,
+               family_name,
+               email,
+               department_id,
+               hired_on,
+               ('mailto:' || email) AS mbox
+        FROM employee
+    """ ] ;
+    rr:subjectMap [
+        rr:template "https://rel2kg.example/id/person/{email}" ;
+        rr:class rel2kg:Person ;
+        rr:class foaf:Person ;
+        rr:class schema:Person
+    ] ;
+    rr:predicateObjectMap [
+        rr:predicate foaf:givenName ;
+        rr:objectMap [ rr:column "given_name" ]
+    ] ;
+    rr:predicateObjectMap [
+        rr:predicate foaf:familyName ;
+        rr:objectMap [ rr:column "family_name" ]
+    ] ;
+    rr:predicateObjectMap [
+        rr:predicate schema:email ;
+        rr:objectMap [ rr:column "email" ]
+    ] ;
+    rr:predicateObjectMap [
+        rr:predicate foaf:mbox ;
+        rr:objectMap [
+            rr:column "mbox" ;
+            rr:termType rr:IRI
+        ]
+    ] ;
+    rr:predicateObjectMap [
+        rr:predicate rel2kg:hiredOn ;
+        rr:objectMap [
+            rr:column "hired_on" ;
+            rr:datatype xsd:date
+        ]
+    ] ;
+    rr:predicateObjectMap [
+        rr:predicate rel2kg:memberOf ;
+        rr:objectMap [
+            rr:parentTriplesMap <#Department> ;
+            rr:joinCondition [
+                rr:child "department_id" ;
+                rr:parent "id"
+            ]
+        ]
+    ] ;
+    rr:predicateObjectMap [
+        rr:predicate dcterms:source ;
+        rr:object <https://rel2kg.example/source/hr>
+    ] .
