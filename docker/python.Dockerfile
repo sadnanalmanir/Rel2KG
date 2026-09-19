@@ -13,6 +13,7 @@ COPY src ./src
 COPY tests ./tests
 COPY mappings ./mappings
 COPY vocab ./vocab
+COPY queries ./queries
 
 RUN pip install --no-cache-dir -e .
 

@@ -60,6 +60,15 @@ services:
     logging: *default-logging
     restart: unless-stopped
 
+  oxigraph:
+    image: ghcr.io/oxigraph/oxigraph:0.5.2
+    ports:
+      - "${OXIGRAPH_HOST_PORT:-7878}:7878"
+    volumes:
+      - oxigraph_data:/data
+    logging: *default-logging
+    restart: unless-stopped
+
   tools:
     build:
       context: .
@@ -80,11 +89,14 @@ services:
       MAPPINGS_DIR: /app/mappings
       VOCAB_PATH: /app/vocab/rel2kg.ttl
       KG_OUTPUT: /data/kg.ttl
+      QUERIES_DIR: /app/queries
+      OXIGRAPH_URL: http://oxigraph:7878
     volumes:
       - sqlite_data:/data
       - ./db:/db:ro
       - ./mappings:/app/mappings:ro
       - ./vocab:/app/vocab:ro
+      - ./queries:/app/queries:ro
       - ./src:/app/src:ro
       - ./tests:/app/tests:ro
     depends_on:
@@ -102,3 +114,4 @@ volumes:
   postgres_data:
   mysql_data:
   sqlite_data:
+  oxigraph_data:

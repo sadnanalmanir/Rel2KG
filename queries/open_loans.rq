@@ -1,0 +1,16 @@
+PREFIX schema: <https://schema.org/>
+PREFIX rel2kg: <https://rel2kg.example/vocab#>
+
+# Library loans that have not been returned. Expected: 2 rows.
+
+SELECT ?email ?title ?loanedOn
+WHERE {
+  ?loan a rel2kg:Loan ;
+        rel2kg:borrower ?person ;
+        rel2kg:borrowed ?book ;
+        rel2kg:loanedOn ?loanedOn .
+  FILTER NOT EXISTS { ?loan rel2kg:returnedOn ?returned }
+  ?person schema:email ?email .
+  ?book schema:name ?title .
+}
+ORDER BY ?email

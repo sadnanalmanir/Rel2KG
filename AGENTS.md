@@ -12,21 +12,23 @@ Continue this repository. Do not start a different product.
 - Seed row counts live in `src/rel2kg/expected.py` and must match `db/*/init.sql`.
 - Person IRIs are minted from **email** in every R2RML mapping (`https://rel2kg.example/id/person/{email}`).
 - Materialization uses **Morph-KGC** from the tools image. Do not add a second R2RML engine.
+- SPARQL is served by **Oxigraph** (`ghcr.io/oxigraph/oxigraph`). Competency questions in `queries/` are tests (`rel2kg query --check`).
 
 ## Layout
 
 - `db/postgres/init.sql` — HR (`campus`)
 - `db/mysql/init.sql` — library (`library`)
 - `db/sqlite/init.sql` — registrar (`courses.db` on volume `sqlite_data`)
-- `src/rel2kg/` — CLI, connections, verify report, R2RML materialize
+- `src/rel2kg/` — CLI, connections, verify report, R2RML materialize, SPARQL
 - `mappings/` — one R2RML Turtle file per database
 - `vocab/rel2kg.ttl` — small target vocabulary
-- `docker-compose.yml` — Postgres + MySQL; `tools` profile for Python
+- `queries/` — SPARQL competency questions
+- `docker-compose.yml` — Postgres + MySQL + Oxigraph; `tools` profile for Python
 
 ## Next slices, in order
 
-1. SPARQL access over the mapped graph (load `kg.ttl` into a triple store, or virtualize with Ontop).
-2. Competency questions as SPARQL files, treated as tests.
+1. A small desk UI over the competency questions (optional).
+2. Virtual SPARQL (Ontop) only if materialization is no longer enough.
 
 ## Do not
 

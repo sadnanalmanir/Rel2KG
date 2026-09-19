@@ -26,7 +26,7 @@ jobs:
           args: format --check
 
   integration:
-    name: Databases and verify
+    name: Databases, graph, and SPARQL
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
@@ -41,6 +41,12 @@ jobs:
         run: docker compose run --rm --build tools
       - name: Materialize R2RML mappings
         run: docker compose run --rm --build tools rel2kg materialize
+      - name: Start Oxigraph
+        run: docker compose up -d oxigraph
+      - name: Load graph and run SPARQL competency questions
+        run: |
+          docker compose run --rm --build tools rel2kg load
+          docker compose run --rm --build tools rel2kg query --check
       - name: Teardown
         if: always()
         run: docker compose down -v

@@ -4,13 +4,22 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "rel2kg"
-version = "0.2.0"
-description = "Heterogeneous relational sources mapped to RDF with R2RML."
+version = "0.3.0"
+description = "Heterogeneous relational sources mapped to RDF and queried with SPARQL."
 readme = "README.md"
 license = { text = "Apache-2.0" }
 requires-python = ">=3.12"
 authors = [{ name = "Rel2KG contributors" }]
-keywords = ["semantic-web", "r2rml", "rdbms", "postgresql", "mysql", "sqlite", "docker"]
+keywords = [
+    "semantic-web",
+    "r2rml",
+    "sparql",
+    "rdbms",
+    "postgresql",
+    "mysql",
+    "sqlite",
+    "docker",
+]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "License :: OSI Approved :: Apache Software License",

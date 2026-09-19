@@ -26,3 +26,24 @@ EXPECTED_COURSE_COUNT = 4
 EXPECTED_LOAN_COUNT = 4
 EXPECTED_ENROLLMENT_COUNT = 6
 INTEGRATED_PERSON_EMAIL = "ada@campus.example"
+
+QUERY_FILES: tuple[str, ...] = (
+    "ada_across_sources.rq",
+    "ada_is_one_person.rq",
+    "class_counts.rq",
+    "cs_enrollments.rq",
+    "open_loans.rq",
+    "people.rq",
+)
+
+EXPECTED_SELECT_ROWS: dict[str, int] = {
+    "ada_across_sources": 1,
+    "class_counts": 6,
+    "cs_enrollments": 5,
+    "open_loans": 2,
+    "people": 7,
+}
+
+EXPECTED_ASK: dict[str, bool] = {
+    "ada_is_one_person": True,
+}

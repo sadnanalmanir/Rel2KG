@@ -1,0 +1,18 @@
+PREFIX rel2kg: <https://rel2kg.example/vocab#>
+
+# Instance counts for the lab classes. Expected: 6 rows.
+
+SELECT ?class (COUNT(?thing) AS ?n)
+WHERE {
+  VALUES ?class {
+    rel2kg:Person
+    rel2kg:Department
+    rel2kg:Book
+    rel2kg:Course
+    rel2kg:Loan
+    rel2kg:Enrollment
+  }
+  ?thing a ?class .
+}
+GROUP BY ?class
+ORDER BY ?class

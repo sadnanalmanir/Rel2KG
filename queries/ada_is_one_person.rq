@@ -1,0 +1,12 @@
+PREFIX schema: <https://schema.org/>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+
+# The same email is described by all three relational sources.
+# Expected: true.
+
+ASK {
+  ?person schema:email "ada@campus.example" ;
+          dcterms:source <https://rel2kg.example/source/hr> ;
+          dcterms:source <https://rel2kg.example/source/library> ;
+          dcterms:source <https://rel2kg.example/source/registrar> .
+}

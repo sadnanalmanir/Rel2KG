@@ -1,0 +1,25 @@
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+PREFIX schema: <https://schema.org/>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX rel2kg: <https://rel2kg.example/vocab#>
+
+# Ada Lovelace as one Person: HR department, a library loan, and a course.
+# Expected: 1 row.
+
+SELECT ?given ?department ?book ?course
+WHERE {
+  ?person a rel2kg:Person ;
+          schema:email "ada@campus.example" ;
+          foaf:givenName ?given ;
+          rel2kg:memberOf ?dept ;
+          dcterms:source <https://rel2kg.example/source/hr> ;
+          dcterms:source <https://rel2kg.example/source/library> ;
+          dcterms:source <https://rel2kg.example/source/registrar> .
+  ?dept schema:name ?department .
+  ?loan rel2kg:borrower ?person ;
+        rel2kg:borrowed ?bookIri .
+  ?bookIri schema:name ?book .
+  ?enrollment rel2kg:student ?person ;
+              rel2kg:course ?courseIri .
+  ?courseIri schema:name ?course .
+}

@@ -7,6 +7,7 @@
 - [ ] `make test`
 - [ ] `make bootstrap` (or `make verify` if the databases were already seeded)
 - [ ] `make materialize` if mappings, vocab, or seed data changed
+- [ ] `make query` if SPARQL files or the graph changed
 
 ## Notes
 

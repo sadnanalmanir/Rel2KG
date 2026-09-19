@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-09-19
+
+### Added
+
+- Oxigraph SPARQL 1.1 endpoint in Docker Compose
+- `rel2kg load` and `rel2kg query` against the materialized graph
+- Six competency SPARQL files in `queries/`, checked in CI
+
 ## [0.2.0] - 2026-09-19
 
 ### Added

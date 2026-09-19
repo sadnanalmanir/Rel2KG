@@ -22,6 +22,16 @@ class TestMain(unittest.TestCase):
         self.assertEqual(args.command, "materialize")
         self.assertEqual(str(args.output), "/tmp/kg.ttl")
 
+    def test_parser_accepts_query_check(self) -> None:
+        args = build_parser().parse_args(["query", "--check", "people"])
+        self.assertEqual(args.command, "query")
+        self.assertTrue(args.check)
+        self.assertEqual(args.names, ["people"])
+
+    def test_parser_accepts_load(self) -> None:
+        args = build_parser().parse_args(["load"])
+        self.assertEqual(args.command, "load")
+
     def test_unknown_command_exits(self) -> None:
         with redirect_stderr(StringIO()), self.assertRaises(SystemExit) as cm:
             main(["nope"])

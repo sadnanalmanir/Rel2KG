@@ -4,9 +4,9 @@
 [![Python](https://img.shields.io/badge/python-3.12-3776AB?logo=python&logoColor=white)](pyproject.toml)
 [![Docker Compose](https://img.shields.io/badge/docker-compose%20v2-2496ED?logo=docker&logoColor=white)](docker-compose.yml)
 
-Relational tables, mapped to RDF with R2RML.
+Relational tables, mapped to RDF with R2RML, queried with SPARQL.
 
-Three independently run campus systems store overlapping facts about the same people. This repository instantiates those systems with **Docker only** — nothing is installed on the host — and maps them to a shared vocabulary. SPARQL over a triple store is the next slice.
+Three independently run campus systems store overlapping facts about the same people. This repository instantiates those systems with **Docker only** — nothing is installed on the host — maps them to a shared vocabulary, and serves SPARQL over Oxigraph.
 
 Apache-2.0. Status: lab / alpha.
 
@@ -46,11 +46,11 @@ flowchart LR
   MY[(MySQL library)]
   SL[(SQLite registrar)]
   MAP[R2RML mappings]
-  KG[RDF graph]
+  OX[Oxigraph SPARQL]
   PG --> MAP
   MY --> MAP
   SL --> MAP
-  MAP --> KG
+  MAP --> OX
 ```
 
 ## Requirements
@@ -79,7 +79,13 @@ That starts PostgreSQL and MySQL (seed SQL runs on the first empty volume), crea
 make materialize
 ```
 
-Or do both in one go: `make kg`. The Turtle graph is written to the `sqlite_data` volume at `/data/kg.ttl`.
+Or do both in one go: `make kg`. The Turtle graph is written to the `sqlite_data` volume at `/data/kg.ttl`. Load it into Oxigraph and run competency questions:
+
+```bash
+make sparql
+```
+
+The SPARQL UI is at http://localhost:7878/
 
 ### Host ports and credentials
 
@@ -88,6 +94,7 @@ Or do both in one go: `make kg`. The Turtle graph is written to the `sqlite_data
 | PostgreSQL | `localhost:5432` | `postgres:5432` |
 | MySQL | `localhost:3306` | `mysql:3306` |
 | SQLite | volume `sqlite_data` → `/data/courses.db` | same path in `tools` |
+| Oxigraph | `localhost:7878` | `oxigraph:7878` |
 
 Lab credentials (see [SECURITY.md](SECURITY.md)): user `rel2kg`, password `rel2kg`. Copy `.env.example` to `.env` to change ports or passwords (`POSTGRES_HOST_PORT`, `MYSQL_HOST_PORT`).
 
@@ -104,14 +111,15 @@ Stop and keep data: `make down`. Wipe and re-seed: `make reset`.
 ## Layout
 
 ```
-docker-compose.yml     PostgreSQL + MySQL + Python tools
+docker-compose.yml     PostgreSQL + MySQL + Oxigraph + Python tools
 docker/python.Dockerfile
 db/postgres/init.sql   HR schema + seed
 db/mysql/init.sql      library schema + seed
 db/sqlite/init.sql     registrar schema + seed
 mappings/              R2RML Turtle, one file per database
 vocab/rel2kg.ttl       target RDFS vocabulary
-src/rel2kg/            CLI, connections, verify, materialize
+queries/               SPARQL competency questions
+src/rel2kg/            CLI, connections, verify, materialize, SPARQL
 tests/                 unit tests (run in Docker)
 ```
 
@@ -124,6 +132,9 @@ tests/                 unit tests (run in Docker)
 | `make verify` | Re-run the report |
 | `make materialize` | Apply R2RML mappings, write Turtle |
 | `make kg` | `bootstrap` then `materialize` |
+| `make load` | PUT the Turtle graph into Oxigraph |
+| `make query` | Run SPARQL competency questions |
+| `make sparql` | Materialize, load, and check SPARQL |
 | `make test` | Unit tests in the tools image |
 | `make lint` | Compose validation + Ruff |
 | `make down` / `make reset` | Stop, or stop and delete volumes |
@@ -140,6 +151,8 @@ tests/                 unit tests (run in Docker)
 
 **Materialize cannot reach a database** — wait for `make bootstrap` (or `docker compose up -d --wait postgres mysql`) before `make materialize`.
 
+**Oxigraph is not reachable** — `make load` starts it. Open http://localhost:7878/ after a successful load. Change the host port with `OXIGRAPH_HOST_PORT` if 7878 is taken.
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md). Please report vulnerabilities via [SECURITY.md](SECURITY.md), not a public issue.
@@ -155,9 +168,30 @@ docker compose run --rm --no-deps tools python -c \
   "from pathlib import Path; print(Path('/data/kg.ttl').read_text()[:1500])"
 ```
 
+## SPARQL
+
+Oxigraph serves SPARQL 1.1 over the materialized graph. Competency questions live in `queries/` and are treated as tests (`rel2kg query --check`).
+
+| Query | What it asks |
+| --- | --- |
+| `people.rq` | Every person email (7) |
+| `ada_across_sources.rq` | Ada in HR, library, and registrar (1 row) |
+| `ada_is_one_person.rq` | ASK: the same Person has all three `dcterms:source` values |
+| `open_loans.rq` | Unreturned loans (2) |
+| `cs_enrollments.rq` | CS staff who are also enrolled (5 rows) |
+| `class_counts.rq` | Instance counts per lab class (6 rows) |
+
+```bash
+make load
+make query
+docker compose run --rm tools rel2kg query ada_across_sources
+```
+
+Open http://localhost:7878/ for Oxigraph's SPARQL UI. The tools container talks to `http://oxigraph:7878`.
+
 ## What is deliberately not here yet
 
-- SPARQL endpoint or a persistent triple store
-- A web UI
+- A custom web UI beyond Oxigraph's SPARQL page
+- Virtual SPARQL over the databases (Ontop); this lab materializes, then queries
 
-The mappings produce a graph. Querying it is the next step.
+The graph is queryable. Federation or a nicer desk can come later.
