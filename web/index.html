@@ -25,6 +25,10 @@
         <h2>Named graphs</h2>
         <ul id="graphs" class="meters"></ul>
       </section>
+      <nav class="views" aria-label="Desk views">
+        <button type="button" data-view="person" class="active">Person</button>
+        <button type="button" data-view="map">Map</button>
+      </nav>
       <section>
         <h2>People</h2>
         <p class="hint">Chips are which sources described this email.</p>
@@ -65,9 +69,38 @@
         </details>
       </div>
 
+      <div id="view-map" class="hidden">
+        <header class="person-head">
+          <div>
+            <p class="kicker">Named graphs</p>
+            <h2>Map</h2>
+            <p class="hint">Toggle sources. Edges are coloured by graph. A white ring means the node appears in more than one graph. Click a person to open the card.</p>
+          </div>
+        </header>
+        <div class="graph-toolbar">
+          <div id="graph-toggles" class="modes" role="group" aria-label="Named graphs"></div>
+          <p id="graph-note" class="meta"></p>
+        </div>
+        <div class="graph-body">
+          <div class="graph-wrap">
+            <canvas id="graph-canvas" aria-label="Named graph map"></canvas>
+          </div>
+          <aside id="graph-detail" class="graph-detail">
+            <p class="empty">Click a node. Drag to pan, scroll to zoom.</p>
+          </aside>
+        </div>
+        <ul class="legend" aria-label="Node types">
+          <li><span class="swatch person"></span> person</li>
+          <li><span class="swatch department"></span> department</li>
+          <li><span class="swatch book"></span> book</li>
+          <li><span class="swatch course"></span> course</li>
+        </ul>
+      </div>
+
       <p id="banner" class="banner hidden"></p>
     </section>
   </main>
+  <script src="/static/graph.js"></script>
   <script src="/static/app.js"></script>
 </body>
 </html>

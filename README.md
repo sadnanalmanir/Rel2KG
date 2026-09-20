@@ -210,9 +210,9 @@ make desk
 
 Then open http://localhost:8765/
 
-- Left: every Person, with HR / library / registrar chips
-- Main: Ada (by default) as three columns — PostgreSQL HR, MySQL library, SQLite registrar
-- Competency questions: tables plus the SPARQL that produced them
+- Left: Person / Map views, named-graph counts, people chips, competency questions
+- Person: Ada (by default) as three columns — PostgreSQL HR, MySQL library, SQLite registrar
+- Map: force layout of people, departments, books, and courses. Toggle `hr` / `library` / `registrar`. Edges are coloured by named graph. A white ring means the node appears in more than one graph. Click a person to open the card.
 
 A Person with all three chips is the integration working. Tim Berners-Lee and Codd only appear in the library.
 

@@ -29,7 +29,10 @@ STATIC_FILES = {
     "/index.html": "index.html",
     "/static/style.css": "style.css",
     "/static/app.js": "app.js",
+    "/static/graph.js": "graph.js",
 }
+
+ALLOWED_MAP_GRAPHS = ("hr", "library", "registrar")
 
 MIME = {
     ".html": "text/html; charset=utf-8",
@@ -221,6 +224,150 @@ def person_card(email: str) -> dict[str, Any]:
     }
 
 
+def parse_map_graphs(raw: str) -> list[str]:
+    parts = [item.strip().lower() for item in raw.split(",") if item.strip()]
+    if not parts:
+        return list(ALLOWED_MAP_GRAPHS)
+    unknown = [item for item in parts if item not in ALLOWED_MAP_GRAPHS]
+    if unknown:
+        raise ValueError(f"unknown graph: {', '.join(unknown)}")
+    seen: list[str] = []
+    for item in parts:
+        if item not in seen:
+            seen.append(item)
+    return seen
+
+
+def _kind_from_iri(iri: str) -> str:
+    if "/id/person/" in iri:
+        return "person"
+    if "/id/department/" in iri:
+        return "department"
+    if "/id/book/" in iri:
+        return "book"
+    if "/id/course/" in iri:
+        return "course"
+    return "entity"
+
+
+def _person_label(row: dict[str, str]) -> str:
+    composed = " ".join(part for part in (row.get("gn"), row.get("fn")) if part).strip()
+    return composed or row.get("nm") or row.get("email") or row["iri"].rsplit("/", 1)[-1]
+
+
+def map_graph(slugs: list[str]) -> dict[str, Any]:
+    values = " ".join(f"<{GRAPH_PREFIX}{slug}>" for slug in slugs)
+    node_rows = bindings_to_rows(
+        post_query(
+            f"""
+            PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+            PREFIX schema: <https://schema.org/>
+            PREFIX rel2kg: <https://rel2kg.example/vocab#>
+            SELECT ?iri ?kind ?email ?gn ?fn ?nm ?name ?code ?g WHERE {{
+              VALUES ?g {{ {values} }}
+              GRAPH ?g {{
+                {{
+                  ?iri a rel2kg:Person .
+                  BIND("person" AS ?kind)
+                  OPTIONAL {{ ?iri schema:email ?email }}
+                  OPTIONAL {{ ?iri foaf:givenName ?gn }}
+                  OPTIONAL {{ ?iri foaf:familyName ?fn }}
+                  OPTIONAL {{ ?iri foaf:name ?nm }}
+                }} UNION {{
+                  ?iri a rel2kg:Department ; schema:name ?name .
+                  BIND("department" AS ?kind)
+                  OPTIONAL {{ ?iri rel2kg:code ?code }}
+                }} UNION {{
+                  ?iri a rel2kg:Book ; schema:name ?name .
+                  BIND("book" AS ?kind)
+                }} UNION {{
+                  ?iri a rel2kg:Course ; schema:name ?name .
+                  BIND("course" AS ?kind)
+                  OPTIONAL {{ ?iri schema:courseCode ?code }}
+                }}
+              }}
+            }}
+            """
+        )
+    )
+    edge_rows = bindings_to_rows(
+        post_query(
+            f"""
+            PREFIX schema: <https://schema.org/>
+            PREFIX rel2kg: <https://rel2kg.example/vocab#>
+            SELECT ?from ?to ?kind ?g WHERE {{
+              VALUES ?g {{ {values} }}
+              GRAPH ?g {{
+                {{ ?from rel2kg:memberOf ?to . BIND("memberOf" AS ?kind) }}
+                UNION {{ ?to schema:author ?from . BIND("author" AS ?kind) }}
+                UNION {{
+                  ?loan rel2kg:borrower ?from ; rel2kg:borrowed ?to .
+                  BIND("borrowed" AS ?kind)
+                }}
+                UNION {{
+                  ?enrollment rel2kg:student ?from ; rel2kg:course ?to .
+                  BIND("enrolled" AS ?kind)
+                }}
+              }}
+            }}
+            """
+        )
+    )
+
+    nodes: dict[str, dict[str, Any]] = {}
+    for row in node_rows:
+        iri = row["iri"]
+        slug = row["g"].removeprefix(GRAPH_PREFIX)
+        node = nodes.setdefault(
+            iri,
+            {
+                "id": iri,
+                "kind": row["kind"],
+                "label": "",
+                "email": row.get("email") or "",
+                "graphs": [],
+            },
+        )
+        if row["kind"] == "person":
+            node["label"] = node["label"] or _person_label(row)
+            node["email"] = node["email"] or row.get("email") or ""
+        else:
+            node["label"] = (
+                node["label"] or row.get("name") or row.get("code") or iri.rsplit("/", 1)[-1]
+            )
+        if slug and slug not in node["graphs"]:
+            node["graphs"].append(slug)
+
+    edges: list[dict[str, str]] = []
+    seen_edges: set[tuple[str, str, str, str]] = set()
+    for row in edge_rows:
+        frm, to, kind = row["from"], row["to"], row["kind"]
+        slug = row["g"].removeprefix(GRAPH_PREFIX)
+        key = (frm, to, kind, slug)
+        if key in seen_edges:
+            continue
+        seen_edges.add(key)
+        for iri in (frm, to):
+            if iri not in nodes:
+                nodes[iri] = {
+                    "id": iri,
+                    "kind": _kind_from_iri(iri),
+                    "label": iri.rsplit("/", 1)[-1],
+                    "email": "",
+                    "graphs": [slug] if slug else [],
+                }
+            elif slug and slug not in nodes[iri]["graphs"]:
+                nodes[iri]["graphs"].append(slug)
+        edges.append({"source": frm, "target": to, "kind": kind, "graph": slug})
+
+    return {
+        "ok": True,
+        "graphs": slugs,
+        "nodes": list(nodes.values()),
+        "edges": edges,
+    }
+
+
 def health() -> dict[str, Any]:
     try:
         ping()
@@ -308,6 +455,16 @@ class DeskHandler(BaseHTTPRequestHandler):
             return
         if path == "/api/queries":
             _json(self, 200, {"ok": True, "queries": query_catalog()})
+            return
+        if path == "/api/graph":
+            raw = parse_qs(parsed.query).get("graphs", [""])[0]
+            try:
+                slugs = parse_map_graphs(raw)
+                _json(self, 200, map_graph(slugs))
+            except ValueError as exc:
+                _json(self, 400, {"ok": False, "error": str(exc)})
+            except Exception as exc:
+                _json(self, 503, {"ok": False, "error": str(exc)})
             return
         if path == "/api/people":
             try:

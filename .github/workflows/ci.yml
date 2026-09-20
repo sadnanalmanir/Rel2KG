@@ -60,6 +60,9 @@ jobs:
           curl -sf http://127.0.0.1:8765/ | grep -q "Integration desk"
           curl -sf http://127.0.0.1:8765/api/query/ada_is_one_person | grep -q '"boolean": true'
           curl -sf "http://127.0.0.1:8765/api/person?email=ada@campus.example" | grep -q '"integrated": true'
+          curl -sf "http://127.0.0.1:8765/api/graph?graphs=hr" | grep -q '"kind": "department"'
+          curl -sf http://127.0.0.1:8765/api/graph | grep -q '"kind": "person"'
+          curl -sf http://127.0.0.1:8765/static/graph.js | grep -q createNamedGraphMap
       - name: Teardown
         if: always()
         run: docker compose down -v

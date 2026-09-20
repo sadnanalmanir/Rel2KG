@@ -14,6 +14,7 @@ Continue this repository. Do not start a different product.
 - Materialization uses **Morph-KGC** from the tools image. Do not add a second R2RML engine.
 - SPARQL is served by **Oxigraph** (`ghcr.io/oxigraph/oxigraph`). Competency questions in `queries/` are tests (`rel2kg query --check`).
 - The product UI is the **integration desk** (`web/`, `rel2kg serve`, Compose service `desk` on port 8765). It only reads SPARQL from Oxigraph. Do not add a second query engine.
+- The Map view (`/api/graph`, `web/graph.js`) draws instance nodes from named graphs. Keep it vanilla canvas; do not add a JS graph library.
 - SHACL shapes live in `shapes/campus.shacl.ttl` and are checked by `rel2kg shacl` (also after `materialize`). Do not swap pySHACL for another validator.
 - Instance triples live in named graphs `graph/hr`, `graph/library`, `graph/registrar`; vocabulary in `graph/vocab`. The default graph is the RDF merge so SPARQL without `GRAPH` still sees one Person.
 

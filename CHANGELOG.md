@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-09-20
+
+### Added
+
+- Named-graph map view on the integration desk (canvas, graph toggles, click a person)
+
 ## [0.6.0] - 2026-09-20
 
 ### Added

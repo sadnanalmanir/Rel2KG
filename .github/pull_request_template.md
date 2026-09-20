@@ -9,7 +9,7 @@
 - [ ] `make materialize` if mappings, vocab, shapes, or seed data changed
 - [ ] `make shacl` if only the graph or shapes changed
 - [ ] `make query` if SPARQL files or the graph changed
-- [ ] `make desk` and open the Ada card if the UI changed
+- [ ] `make desk` and open the Ada card / Map view if the UI changed
 
 ## Notes
 

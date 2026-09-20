@@ -6,8 +6,15 @@ const oxLink = document.getElementById("oxigraph-link");
 const bannerEl = document.getElementById("banner");
 const viewPerson = document.getElementById("view-person");
 const viewQuery = document.getElementById("view-query");
+const viewMap = document.getElementById("view-map");
+const graphNote = document.getElementById("graph-note");
+const graphDetail = document.getElementById("graph-detail");
+const graphToggles = document.getElementById("graph-toggles");
 
 let focusEmail = "ada@campus.example";
+let activeView = "person";
+let enabledGraphs = new Set(["hr", "library", "registrar"]);
+let graphMap = null;
 
 function showBanner(text) {
   bannerEl.textContent = text;
@@ -61,9 +68,19 @@ function renderQuestions(queries) {
     .join("");
 }
 
+function showView(name) {
+  activeView = name;
+  viewPerson.classList.toggle("hidden", name !== "person");
+  viewQuery.classList.toggle("hidden", name !== "query");
+  viewMap.classList.toggle("hidden", name !== "map");
+  for (const btn of document.querySelectorAll(".views [data-view]")) {
+    btn.classList.toggle("active", btn.dataset.view === (name === "query" ? "person" : name));
+  }
+  if (name === "map") loadMap();
+}
+
 function renderPerson(card) {
-  viewQuery.classList.add("hidden");
-  viewPerson.classList.remove("hidden");
+  showView("person");
   document.getElementById("person-name").textContent = card.display;
   document.getElementById("person-email").textContent = card.email;
   const flag = document.getElementById("person-flag");
@@ -118,8 +135,7 @@ function tableHtml(vars, rows) {
 }
 
 function renderQuery(payload, meta) {
-  viewPerson.classList.add("hidden");
-  viewQuery.classList.remove("hidden");
+  showView("query");
   document.getElementById("query-name").textContent = meta.title;
   document.getElementById("sparql").textContent = payload.sparql;
   const flag = document.getElementById("query-flag");
@@ -172,10 +188,77 @@ async function openQuery(name, meta) {
   renderQuery(payload, meta);
 }
 
+function describeNode(node) {
+  if (!node) {
+    graphDetail.innerHTML = `<p class="empty">Click a node. Drag to pan, scroll to zoom.</p>`;
+    return;
+  }
+  const graphs = (node.graphs || []).join(", ") || "—";
+  graphDetail.innerHTML = `
+    <p class="kicker">${node.kind}</p>
+    <h3>${node.label || node.id}</h3>
+    ${node.email ? `<p class="mono">${node.email}</p>` : ""}
+    <p class="hint">Graphs: ${graphs}</p>
+    ${node.kind === "person" && node.email ? `<p class="hint">Opens the person card.</p>` : ""}
+  `;
+}
+
+async function loadMap() {
+  const graphs = ["hr", "library", "registrar"].filter((name) => enabledGraphs.has(name));
+  if (!graphs.length) {
+    enabledGraphs.add("hr");
+    graphs.push("hr");
+  }
+  if (graphToggles) {
+    for (const btn of graphToggles.querySelectorAll("button")) {
+      btn.classList.toggle("active", enabledGraphs.has(btn.dataset.graph));
+    }
+  }
+  const payload = await getJson(`/api/graph?graphs=${graphs.join(",")}`);
+  if (!payload.ok && payload.error) {
+    showBanner(payload.error);
+    return;
+  }
+  if (!graphMap) {
+    const canvas = document.getElementById("graph-canvas");
+    graphMap = window.createNamedGraphMap(canvas, {
+      onSelect(node) {
+        describeNode(node);
+        if (node && node.kind === "person" && node.email) openPerson(node.email);
+      },
+    });
+  }
+  graphMap.setData(payload);
+  graphNote.textContent = `${payload.nodes.length} nodes · ${payload.edges.length} edges · ${graphs.join(", ")}`;
+}
+
 peopleEl.addEventListener("click", (event) => {
   const btn = event.target.closest("button[data-email]");
   if (btn) openPerson(btn.dataset.email);
 });
+
+document.querySelector(".views").addEventListener("click", (event) => {
+  const btn = event.target.closest("button[data-view]");
+  if (btn) showView(btn.dataset.view);
+});
+
+if (graphToggles) {
+  graphToggles.innerHTML = ["hr", "library", "registrar"]
+    .map((name) => `<button type="button" class="${name} active" data-graph="${name}">${name}</button>`)
+    .join("");
+  graphToggles.addEventListener("click", (event) => {
+    const btn = event.target.closest("button[data-graph]");
+    if (!btn) return;
+    const name = btn.dataset.graph;
+    if (enabledGraphs.has(name)) {
+      if (enabledGraphs.size === 1) return;
+      enabledGraphs.delete(name);
+    } else {
+      enabledGraphs.add(name);
+    }
+    if (activeView === "map") loadMap();
+  });
+}
 
 async function boot() {
   const health = await getJson("/api/health");
