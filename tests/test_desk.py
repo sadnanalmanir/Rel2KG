@@ -20,6 +20,7 @@ class TestDeskStatic(unittest.TestCase):
         self.assertIn("Integration desk", text)
         self.assertIn('id="people"', text)
         self.assertIn('id="sources"', text)
+        self.assertIn('id="graphs"', text)
 
 
 class TestDeskHelpers(unittest.TestCase):

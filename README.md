@@ -186,6 +186,8 @@ Oxigraph serves SPARQL 1.1 over the materialized graph. Competency questions liv
 | `people.rq` | Every person email (7) |
 | `ada_across_sources.rq` | Ada in HR, library, and registrar (1 row) |
 | `ada_is_one_person.rq` | ASK: the same Person has all three `dcterms:source` values |
+| `ada_in_graphs.rq` | Graphs that mention Ada (3) |
+| `named_graphs.rq` | Named graphs in the dataset (4) |
 | `open_loans.rq` | Unreturned loans (2) |
 | `cs_enrollments.rq` | CS staff who are also enrolled (5 rows) |
 | `class_counts.rq` | Instance counts per lab class (6 rows) |
@@ -224,7 +226,19 @@ make shacl
 
 `make materialize` runs the same check so a mapping bug fails before SPARQL.
 
+## Named graphs
+
+Each R2RML mapping writes into its own graph. The vocabulary sits in a fourth graph. The default graph is the RDF merge of those graphs, so competency questions that do not mention `GRAPH` still see one Person.
+
+| Graph | Source |
+| --- | --- |
+| `https://rel2kg.example/graph/hr` | PostgreSQL campus HR |
+| `https://rel2kg.example/graph/library` | MySQL library |
+| `https://rel2kg.example/graph/registrar` | SQLite registrar |
+| `https://rel2kg.example/graph/vocab` | `vocab/rel2kg.ttl` |
+
+`named_graphs.rq` lists the four graphs. `ada_in_graphs.rq` asks which graphs mention Ada (HR, library, registrar). `make materialize` writes both `kg.ttl` (union) and `kg.nq` (dataset). `make load` PUTs the N-Quads file.
+
 ## What is deliberately not here yet
 
-- Named graphs per source
 - Virtual SPARQL over the live tables (Ontop)

@@ -1,0 +1,10 @@
+PREFIX rel2kg: <https://rel2kg.example/vocab#>
+
+# Named graphs in the dataset. Expected: 4 (hr, library, registrar, vocab).
+
+SELECT DISTINCT ?g
+WHERE {
+  GRAPH ?g { ?s ?p ?o }
+  FILTER(STRSTARTS(STR(?g), "https://rel2kg.example/graph/"))
+}
+ORDER BY ?g

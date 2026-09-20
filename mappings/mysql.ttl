@@ -21,7 +21,8 @@
         rr:template "https://rel2kg.example/id/person/{email}" ;
         rr:class rel2kg:Person ;
         rr:class foaf:Person ;
-        rr:class schema:Person
+        rr:class schema:Person ;
+        rr:graph <https://rel2kg.example/graph/library>
     ] ;
     rr:predicateObjectMap [
         rr:predicate foaf:name ;
@@ -48,7 +49,8 @@
     rr:subjectMap [
         rr:template "https://rel2kg.example/id/book/{isbn}" ;
         rr:class rel2kg:Book ;
-        rr:class schema:Book
+        rr:class schema:Book ;
+        rr:graph <https://rel2kg.example/graph/library>
     ] ;
     rr:predicateObjectMap [
         rr:predicate schema:name ;
@@ -84,7 +86,8 @@
     rr:logicalTable [ rr:tableName "loan" ] ;
     rr:subjectMap [
         rr:template "https://rel2kg.example/id/loan/{id}" ;
-        rr:class rel2kg:Loan
+        rr:class rel2kg:Loan ;
+        rr:graph <https://rel2kg.example/graph/library>
     ] ;
     rr:predicateObjectMap [
         rr:predicate rel2kg:borrower ;

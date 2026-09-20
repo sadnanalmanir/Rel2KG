@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-09-20
+
+### Added
+
+- Named graphs per source (`graph/hr`, `graph/library`, `graph/registrar`, `graph/vocab`)
+- N-Quads output (`kg.nq`) and Oxigraph load of the dataset
+- SPARQL competency questions `named_graphs.rq` and `ada_in_graphs.rq`
+
+### Changed
+
+- The default graph holds the RDF merge; named graphs keep per-source triples for `GRAPH` queries
+
 ## [0.5.0] - 2026-09-20
 
 ### Added

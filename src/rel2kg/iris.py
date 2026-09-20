@@ -17,6 +17,13 @@ SOURCE_HR = URIRef(f"{BASE}source/hr")
 SOURCE_LIBRARY = URIRef(f"{BASE}source/library")
 SOURCE_REGISTRAR = URIRef(f"{BASE}source/registrar")
 
+GRAPH_HR = URIRef(f"{BASE}graph/hr")
+GRAPH_LIBRARY = URIRef(f"{BASE}graph/library")
+GRAPH_REGISTRAR = URIRef(f"{BASE}graph/registrar")
+GRAPH_VOCAB = URIRef(f"{BASE}graph/vocab")
+
+NAMED_GRAPHS: tuple[URIRef, ...] = (GRAPH_HR, GRAPH_LIBRARY, GRAPH_REGISTRAR, GRAPH_VOCAB)
+
 
 def iri_safe(value: str) -> str:
     """Percent-encode the way R2RML templates encode IRI components."""

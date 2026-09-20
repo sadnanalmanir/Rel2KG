@@ -13,7 +13,8 @@
     rr:subjectMap [
         rr:template "https://rel2kg.example/id/course/{code}" ;
         rr:class rel2kg:Course ;
-        rr:class schema:Course
+        rr:class schema:Course ;
+        rr:graph <https://rel2kg.example/graph/registrar>
     ] ;
     rr:predicateObjectMap [
         rr:predicate schema:name ;
@@ -44,7 +45,8 @@
         rr:template "https://rel2kg.example/id/person/{student_email}" ;
         rr:class rel2kg:Person ;
         rr:class foaf:Person ;
-        rr:class schema:Person
+        rr:class schema:Person ;
+        rr:graph <https://rel2kg.example/graph/registrar>
     ] ;
     rr:predicateObjectMap [
         rr:predicate schema:email ;
@@ -59,7 +61,8 @@
     rr:logicalTable [ rr:tableName "enrollment" ] ;
     rr:subjectMap [
         rr:template "https://rel2kg.example/id/enrollment/{id}" ;
-        rr:class rel2kg:Enrollment
+        rr:class rel2kg:Enrollment ;
+        rr:graph <https://rel2kg.example/graph/registrar>
     ] ;
     rr:predicateObjectMap [
         rr:predicate rel2kg:student ;

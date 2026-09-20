@@ -30,3 +30,8 @@ class TestQueries(unittest.TestCase):
         text = (QUERIES_DIR / "ada_across_sources.rq").read_text(encoding="utf-8")
         for source in ("hr", "library", "registrar"):
             self.assertIn(f"source/{source}", text)
+
+    def test_graph_queries_use_graph_pattern(self) -> None:
+        for name in ("named_graphs.rq", "ada_in_graphs.rq"):
+            text = (QUERIES_DIR / name).read_text(encoding="utf-8")
+            self.assertIn("GRAPH ?g", text)

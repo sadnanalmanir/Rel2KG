@@ -1,3 +1,4 @@
+const graphsEl = document.getElementById("graphs");
 const peopleEl = document.getElementById("people");
 const questionsEl = document.getElementById("questions");
 const healthEl = document.getElementById("health");
@@ -182,6 +183,11 @@ async function boot() {
   healthEl.className = `pill ${health.ok && !health.empty ? "ok" : "bad"}`;
   if (health.oxigraph) oxLink.href = `${health.oxigraph.replace(/\/$/, "")}/`;
   focusEmail = health.focus_email || focusEmail;
+  if (graphsEl) {
+    graphsEl.innerHTML = (health.graphs || [])
+      .map((g) => `<li class="${g.name}"><span>${g.name}</span><span>${g.triples}</span></li>`)
+      .join("");
+  }
   if (!health.ok || health.empty) {
     showBanner("Oxigraph has no graph yet. Run `make load` (after `make materialize`), then refresh.");
   }

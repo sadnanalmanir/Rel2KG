@@ -6,7 +6,7 @@ from typing import Any
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
-from rel2kg.config import KG_OUTPUT, OXIGRAPH_URL, QUERIES_DIR
+from rel2kg.config import KG_NQUADS, KG_OUTPUT, OXIGRAPH_URL, QUERIES_DIR
 from rel2kg.db import wait_for
 from rel2kg.expected import EXPECTED_ASK, EXPECTED_SELECT_ROWS
 
@@ -40,22 +40,49 @@ def wait_for_oxigraph() -> None:
     wait_for("Oxigraph", ping)
 
 
+def _nquads_path(graph_path: Path) -> Path:
+    if graph_path.suffix == ".nq":
+        return graph_path
+    sibling = graph_path.with_suffix(".nq")
+    if sibling.is_file():
+        return sibling
+    if KG_NQUADS.is_file():
+        return KG_NQUADS
+    return graph_path
+
+
 def load_graph(path: Path | None = None) -> int:
     graph_path = path or KG_OUTPUT
-    if not graph_path.is_file():
-        print(f"Graph file missing: {graph_path}")
-        print("Run `rel2kg materialize` first.")
+    ttl_path = graph_path if graph_path.suffix != ".nq" else graph_path.with_suffix(".ttl")
+    nq_path = _nquads_path(graph_path)
+    if nq_path.suffix != ".nq":
+        nq_path = None
+    if not ttl_path.is_file() and not (nq_path and nq_path.is_file()):
+        print("Graph file missing. Run `rel2kg materialize` first.")
         return 1
 
     wait_for_oxigraph()
-    data = graph_path.read_bytes()
     try:
-        status, _, _ = _request(
-            "/store?default",
-            method="PUT",
-            data=data,
-            headers={"Content-Type": "text/turtle; charset=utf-8"},
-        )
+        try:
+            _request("/store", method="DELETE")
+        except HTTPError as exc:
+            if exc.code not in {204, 404}:
+                raise
+        status = 0
+        if ttl_path.is_file():
+            status, _, _ = _request(
+                "/store?default",
+                method="PUT",
+                data=ttl_path.read_bytes(),
+                headers={"Content-Type": "text/turtle; charset=utf-8"},
+            )
+        if nq_path and nq_path.is_file():
+            status, _, _ = _request(
+                "/store",
+                method="POST",
+                data=nq_path.read_bytes(),
+                headers={"Content-Type": "application/n-quads; charset=utf-8"},
+            )
     except HTTPError as exc:
         print(f"Oxigraph rejected the graph: HTTP {exc.code} {exc.reason}")
         return 1
@@ -64,10 +91,27 @@ def load_graph(path: Path | None = None) -> int:
         return 1
 
     count = _triple_count()
-    print(f"Loaded {graph_path} into {OXIGRAPH_URL}/store?default (HTTP {status})")
+    graphs = _named_graph_count()
+    print(f"Loaded default {ttl_path} and named graphs {nq_path} (HTTP {status})")
     print(f"Default graph triples: {count}")
+    print(f"Named graphs: {graphs}")
     print(f"SPARQL UI: {OXIGRAPH_URL}/")
     return 0
+
+
+def _named_graph_count() -> int:
+    payload = post_query(
+        """
+        SELECT (COUNT(DISTINCT ?g) AS ?n) WHERE {
+          GRAPH ?g { ?s ?p ?o }
+          FILTER(STRSTARTS(STR(?g), "https://rel2kg.example/graph/"))
+        }
+        """
+    )
+    bindings = payload.get("results", {}).get("bindings", [])
+    if not bindings:
+        return 0
+    return int(bindings[0]["n"]["value"])
 
 
 def _triple_count() -> int:

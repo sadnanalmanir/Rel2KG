@@ -15,6 +15,7 @@ Continue this repository. Do not start a different product.
 - SPARQL is served by **Oxigraph** (`ghcr.io/oxigraph/oxigraph`). Competency questions in `queries/` are tests (`rel2kg query --check`).
 - The product UI is the **integration desk** (`web/`, `rel2kg serve`, Compose service `desk` on port 8765). It only reads SPARQL from Oxigraph. Do not add a second query engine.
 - SHACL shapes live in `shapes/campus.shacl.ttl` and are checked by `rel2kg shacl` (also after `materialize`). Do not swap pySHACL for another validator.
+- Instance triples live in named graphs `graph/hr`, `graph/library`, `graph/registrar`; vocabulary in `graph/vocab`. The default graph is the RDF merge so SPARQL without `GRAPH` still sees one Person.
 
 ## Layout
 
@@ -31,8 +32,7 @@ Continue this repository. Do not start a different product.
 
 ## Next slices, in order
 
-1. Named graphs per source (HR / library / registrar).
-2. Virtual SPARQL (Ontop) only if materialization is no longer enough.
+1. Virtual SPARQL (Ontop) only if materialization is no longer enough.
 
 ## Do not
 

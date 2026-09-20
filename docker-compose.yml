@@ -90,6 +90,7 @@ services:
       VOCAB_PATH: /app/vocab/rel2kg.ttl
       SHAPES_PATH: /app/shapes/campus.shacl.ttl
       KG_OUTPUT: /data/kg.ttl
+      KG_NQUADS: /data/kg.nq
       QUERIES_DIR: /app/queries
       WEB_DIR: /app/web
       OXIGRAPH_URL: http://oxigraph:7878

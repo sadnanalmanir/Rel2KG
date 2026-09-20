@@ -71,6 +71,19 @@ body {
 }
 .rail h2 { font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
 .rail section + section { margin-top: 28px; }
+.meters { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.meters li {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--mono);
+  font-size: 12px;
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  background: var(--card);
+}
+.meters .hr { color: var(--hr); }
+.meters .library { color: var(--lib); }
+.meters .registrar { color: var(--reg); }
 
 .people, .questions { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
 .people button, .questions button {

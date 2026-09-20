@@ -13,7 +13,8 @@
     rr:subjectMap [
         rr:template "https://rel2kg.example/id/department/{code}" ;
         rr:class rel2kg:Department ;
-        rr:class schema:Organization
+        rr:class schema:Organization ;
+        rr:graph <https://rel2kg.example/graph/hr>
     ] ;
     rr:predicateObjectMap [
         rr:predicate schema:name ;
@@ -43,7 +44,8 @@
         rr:template "https://rel2kg.example/id/person/{email}" ;
         rr:class rel2kg:Person ;
         rr:class foaf:Person ;
-        rr:class schema:Person
+        rr:class schema:Person ;
+        rr:graph <https://rel2kg.example/graph/hr>
     ] ;
     rr:predicateObjectMap [
         rr:predicate foaf:givenName ;

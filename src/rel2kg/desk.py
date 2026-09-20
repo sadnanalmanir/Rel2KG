@@ -22,6 +22,7 @@ from rel2kg.sparql import (
 EMAIL_RE = re.compile(r"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$")
 QUERY_NAME_RE = re.compile(r"^[a-z0-9_]+$")
 SOURCE_PREFIX = "https://rel2kg.example/source/"
+GRAPH_PREFIX = "https://rel2kg.example/graph/"
 
 STATIC_FILES = {
     "/": "index.html",
@@ -47,30 +48,56 @@ def people_with_sources() -> list[dict[str, Any]]:
     payload = post_query(
         """
         PREFIX schema: <https://schema.org/>
-        PREFIX dcterms: <http://purl.org/dc/terms/>
         PREFIX rel2kg: <https://rel2kg.example/vocab#>
-        SELECT DISTINCT ?email ?source WHERE {
-          ?person a rel2kg:Person ; schema:email ?email .
-          {
-            ?person dcterms:source ?source .
-          } UNION {
-            ?loan rel2kg:borrower ?person .
-            BIND(<https://rel2kg.example/source/library> AS ?source)
-          } UNION {
-            ?enrollment rel2kg:student ?person .
-            BIND(<https://rel2kg.example/source/registrar> AS ?source)
+        SELECT DISTINCT ?email ?g WHERE {
+          GRAPH ?g {
+            { ?person a rel2kg:Person }
+            UNION { ?loan rel2kg:borrower ?person }
+            UNION { ?enrollment rel2kg:student ?person }
           }
+          ?person schema:email ?email .
+          FILTER(STRSTARTS(STR(?g), "https://rel2kg.example/graph/"))
+          FILTER(!CONTAINS(STR(?g), "/vocab"))
         }
-        ORDER BY ?email ?source
+        ORDER BY ?email ?g
         """
     )
+    rows = bindings_to_rows(payload)
     grouped: dict[str, list[str]] = {}
-    for row in bindings_to_rows(payload):
-        email = row["email"]
-        source = row["source"].removeprefix(SOURCE_PREFIX)
-        grouped.setdefault(email, [])
-        if source not in grouped[email]:
-            grouped[email].append(source)
+    if rows and "g" in rows[0]:
+        for row in rows:
+            email = row["email"]
+            source = row["g"].removeprefix(GRAPH_PREFIX)
+            grouped.setdefault(email, [])
+            if source not in grouped[email]:
+                grouped[email].append(source)
+    else:
+        payload = post_query(
+            """
+            PREFIX schema: <https://schema.org/>
+            PREFIX dcterms: <http://purl.org/dc/terms/>
+            PREFIX rel2kg: <https://rel2kg.example/vocab#>
+            SELECT DISTINCT ?email ?source WHERE {
+              ?person a rel2kg:Person ; schema:email ?email .
+              {
+                ?person dcterms:source ?source .
+              } UNION {
+                ?loan rel2kg:borrower ?person .
+                BIND(<https://rel2kg.example/source/library> AS ?source)
+              } UNION {
+                ?enrollment rel2kg:student ?person .
+                BIND(<https://rel2kg.example/source/registrar> AS ?source)
+              }
+            }
+            ORDER BY ?email ?source
+            """
+        )
+        for row in bindings_to_rows(payload):
+            email = row["email"]
+            source = row["source"].removeprefix(SOURCE_PREFIX)
+            grouped.setdefault(email, [])
+            if source not in grouped[email]:
+                grouped[email].append(source)
     return [
         {
             "email": email,
@@ -200,9 +227,29 @@ def health() -> dict[str, Any]:
         payload = post_query("SELECT (COUNT(*) AS ?n) WHERE { ?s ?p ?o }")
         rows = bindings_to_rows(payload)
         triples = int(rows[0]["n"]) if rows else 0
+        graph_rows = bindings_to_rows(
+            post_query(
+                """
+                SELECT ?g (COUNT(*) AS ?n) WHERE {
+                  GRAPH ?g { ?s ?p ?o }
+                }
+                GROUP BY ?g
+                ORDER BY ?g
+                """
+            )
+        )
+        graphs = [
+            {
+                "iri": row["g"],
+                "name": row["g"].rsplit("/", 1)[-1],
+                "triples": int(row["n"]),
+            }
+            for row in graph_rows
+        ]
         return {
             "ok": True,
             "triples": triples,
+            "graphs": graphs,
             "oxigraph": OXIGRAPH_PUBLIC_URL,
             "focus_email": INTEGRATED_PERSON_EMAIL,
             "empty": triples == 0,
@@ -211,6 +258,7 @@ def health() -> dict[str, Any]:
         return {
             "ok": False,
             "triples": 0,
+            "graphs": [],
             "oxigraph": OXIGRAPH_PUBLIC_URL,
             "focus_email": INTEGRATED_PERSON_EMAIL,
             "empty": True,

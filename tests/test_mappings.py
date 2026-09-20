@@ -42,6 +42,16 @@ class TestMappings(unittest.TestCase):
                 f"{name} does not mint Person IRIs from email",
             )
 
+    def test_each_mapping_declares_a_named_graph(self) -> None:
+        expected = {
+            "postgres.ttl": "https://rel2kg.example/graph/hr",
+            "mysql.ttl": "https://rel2kg.example/graph/library",
+            "sqlite.ttl": "https://rel2kg.example/graph/registrar",
+        }
+        for name, iri in expected.items():
+            text = (MAPPINGS_DIR / name).read_text(encoding="utf-8")
+            self.assertIn(f"rr:graph <{iri}>", text)
+
     def test_person_template_is_shared(self) -> None:
         needle = "https://rel2kg.example/id/person/{email}"
         sqlite_needle = "https://rel2kg.example/id/person/{student_email}"

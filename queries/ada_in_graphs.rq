@@ -1,0 +1,12 @@
+PREFIX schema: <https://schema.org/>
+
+# Graphs that mention Ada Lovelace. Expected: 3 (hr, library, registrar).
+
+SELECT DISTINCT ?g
+WHERE {
+  GRAPH ?g {
+    ?person schema:email "ada@campus.example" .
+  }
+  FILTER(STRSTARTS(STR(?g), "https://rel2kg.example/graph/"))
+}
+ORDER BY ?g
