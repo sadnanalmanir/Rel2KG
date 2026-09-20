@@ -29,7 +29,7 @@ classifiers = [
     "Topic :: Database",
 ]
 dependencies = [
-    "psycopg2-binary==2.9.10",
+    "psycopg2-binary==2.9.13",
     "PyMySQL==1.1.1",
     "morph-kgc[postgresql,mysql,sqlite]==2.10.0",
     "pyshacl==0.30.1",
