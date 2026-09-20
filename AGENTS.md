@@ -14,6 +14,7 @@ Continue this repository. Do not start a different product.
 - Materialization uses **Morph-KGC** from the tools image. Do not add a second R2RML engine.
 - SPARQL is served by **Oxigraph** (`ghcr.io/oxigraph/oxigraph`). Competency questions in `queries/` are tests (`rel2kg query --check`).
 - The product UI is the **integration desk** (`web/`, `rel2kg serve`, Compose service `desk` on port 8765). It only reads SPARQL from Oxigraph. Do not add a second query engine.
+- SHACL shapes live in `shapes/campus.shacl.ttl` and are checked by `rel2kg shacl` (also after `materialize`). Do not swap pySHACL for another validator.
 
 ## Layout
 
@@ -23,15 +24,15 @@ Continue this repository. Do not start a different product.
 - `src/rel2kg/` — CLI, connections, verify report, R2RML materialize, SPARQL
 - `mappings/` — one R2RML Turtle file per database
 - `vocab/rel2kg.ttl` — small target vocabulary
+- `shapes/campus.shacl.ttl` — SHACL constraints over the mapped graph
 - `queries/` — SPARQL competency questions
 - `web/` — integration desk static UI
 - `docker-compose.yml` — Postgres + MySQL + Oxigraph + desk; `tools` profile for Python
 
 ## Next slices, in order
 
-1. SHACL over the materialized graph.
-2. Named graphs per source (HR / library / registrar).
-3. Virtual SPARQL (Ontop) only if materialization is no longer enough.
+1. Named graphs per source (HR / library / registrar).
+2. Virtual SPARQL (Ontop) only if materialization is no longer enough.
 
 ## Do not
 

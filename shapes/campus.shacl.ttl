@@ -1,0 +1,212 @@
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rel2kg: <https://rel2kg.example/vocab#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix schema: <https://schema.org/> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+# Constraints that every mapped instance must satisfy.
+# Person is intentionally weak: library-only authors have email+name,
+# HR employees have given/family/memberOf, students may have only email.
+
+rel2kg:PersonShape a sh:NodeShape ;
+    sh:targetClass rel2kg:Person ;
+    sh:name "Person" ;
+    sh:description "Every person has an email and at least one source." ;
+    sh:nodeKind sh:IRI ;
+    sh:pattern "^https://rel2kg\\.example/id/person/" ;
+    sh:property [
+        sh:path schema:email ;
+        sh:name "email" ;
+        sh:minCount 1 ;
+        sh:datatype xsd:string ;
+        sh:pattern "^[^@]+@[^@]+$" ;
+        sh:message "Person must have a schema:email."
+    ] ;
+    sh:property [
+        sh:path dcterms:source ;
+        sh:name "source" ;
+        sh:minCount 1 ;
+        sh:nodeKind sh:IRI ;
+        sh:message "Person must record dcterms:source."
+    ] .
+
+rel2kg:EmployeeShape a sh:NodeShape ;
+    sh:targetSubjectsOf rel2kg:hiredOn ;
+    sh:name "Employee" ;
+    sh:description "HR people (those with hiredOn) have names and a department." ;
+    sh:property [
+        sh:path foaf:givenName ;
+        sh:minCount 1 ;
+        sh:datatype xsd:string ;
+        sh:message "HR person must have foaf:givenName."
+    ] ;
+    sh:property [
+        sh:path foaf:familyName ;
+        sh:minCount 1 ;
+        sh:datatype xsd:string ;
+        sh:message "HR person must have foaf:familyName."
+    ] ;
+    sh:property [
+        sh:path rel2kg:memberOf ;
+        sh:minCount 1 ;
+        sh:class rel2kg:Department ;
+        sh:message "HR person must be a member of a Department."
+    ] ;
+    sh:property [
+        sh:path rel2kg:hiredOn ;
+        sh:minCount 1 ;
+        sh:datatype xsd:date ;
+        sh:message "HR person must have rel2kg:hiredOn as xsd:date."
+    ] .
+
+rel2kg:DepartmentShape a sh:NodeShape ;
+    sh:targetClass rel2kg:Department ;
+    sh:name "Department" ;
+    sh:nodeKind sh:IRI ;
+    sh:pattern "^https://rel2kg\\.example/id/department/" ;
+    sh:property [
+        sh:path schema:name ;
+        sh:minCount 1 ;
+        sh:datatype xsd:string
+    ] ;
+    sh:property [
+        sh:path rel2kg:code ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string
+    ] ;
+    sh:property [
+        sh:path dcterms:source ;
+        sh:minCount 1 ;
+        sh:nodeKind sh:IRI
+    ] .
+
+rel2kg:BookShape a sh:NodeShape ;
+    sh:targetClass rel2kg:Book ;
+    sh:name "Book" ;
+    sh:nodeKind sh:IRI ;
+    sh:pattern "^https://rel2kg\\.example/id/book/" ;
+    sh:property [
+        sh:path schema:name ;
+        sh:minCount 1 ;
+        sh:datatype xsd:string
+    ] ;
+    sh:property [
+        sh:path schema:isbn ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string
+    ] ;
+    sh:property [
+        sh:path schema:author ;
+        sh:minCount 1 ;
+        sh:class rel2kg:Person ;
+        sh:message "Book must have a Person as schema:author."
+    ] ;
+    sh:property [
+        sh:path schema:datePublished ;
+        sh:minCount 1 ;
+        sh:datatype xsd:gYear
+    ] ;
+    sh:property [
+        sh:path dcterms:source ;
+        sh:minCount 1 ;
+        sh:nodeKind sh:IRI
+    ] .
+
+rel2kg:CourseShape a sh:NodeShape ;
+    sh:targetClass rel2kg:Course ;
+    sh:name "Course" ;
+    sh:nodeKind sh:IRI ;
+    sh:pattern "^https://rel2kg\\.example/id/course/" ;
+    sh:property [
+        sh:path schema:name ;
+        sh:minCount 1 ;
+        sh:datatype xsd:string
+    ] ;
+    sh:property [
+        sh:path schema:courseCode ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string
+    ] ;
+    sh:property [
+        sh:path rel2kg:credits ;
+        sh:minCount 1 ;
+        sh:datatype xsd:integer
+    ] ;
+    sh:property [
+        sh:path dcterms:source ;
+        sh:minCount 1 ;
+        sh:nodeKind sh:IRI
+    ] .
+
+rel2kg:LoanShape a sh:NodeShape ;
+    sh:targetClass rel2kg:Loan ;
+    sh:name "Loan" ;
+    sh:nodeKind sh:IRI ;
+    sh:pattern "^https://rel2kg\\.example/id/loan/" ;
+    sh:property [
+        sh:path rel2kg:borrower ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:class rel2kg:Person ;
+        sh:message "Loan must have a Person borrower."
+    ] ;
+    sh:property [
+        sh:path rel2kg:borrowed ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:class rel2kg:Book ;
+        sh:message "Loan must point at a Book."
+    ] ;
+    sh:property [
+        sh:path rel2kg:loanedOn ;
+        sh:minCount 1 ;
+        sh:datatype xsd:date
+    ] ;
+    sh:property [
+        sh:path rel2kg:returnedOn ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:date
+    ] ;
+    sh:property [
+        sh:path dcterms:source ;
+        sh:minCount 1 ;
+        sh:nodeKind sh:IRI
+    ] .
+
+rel2kg:EnrollmentShape a sh:NodeShape ;
+    sh:targetClass rel2kg:Enrollment ;
+    sh:name "Enrollment" ;
+    sh:nodeKind sh:IRI ;
+    sh:pattern "^https://rel2kg\\.example/id/enrollment/" ;
+    sh:property [
+        sh:path rel2kg:student ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:class rel2kg:Person
+    ] ;
+    sh:property [
+        sh:path rel2kg:course ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:class rel2kg:Course
+    ] ;
+    sh:property [
+        sh:path rel2kg:term ;
+        sh:minCount 1 ;
+        sh:datatype xsd:string
+    ] ;
+    sh:property [
+        sh:path rel2kg:grade ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string
+    ] ;
+    sh:property [
+        sh:path dcterms:source ;
+        sh:minCount 1 ;
+        sh:nodeKind sh:IRI
+    ] .

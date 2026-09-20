@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help up bootstrap verify materialize kg load query sparql desk test lint config down reset
+.PHONY: help up bootstrap verify materialize kg shacl load query sparql desk test lint config down reset
 
 help: ## Show available targets
 	@awk 'BEGIN {FS = ":.*##"} /^[a-zA-Z_-]+:.*##/ {printf "  %-12s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -15,8 +15,11 @@ bootstrap: ## Create SQLite and print a status report from all three sources
 verify: ## Re-run the three-database status report
 	docker compose run --rm --build tools rel2kg verify
 
-materialize: ## Apply R2RML mappings and write Turtle
+materialize: ## Apply R2RML mappings, write Turtle, and run SHACL
 	docker compose run --rm --build tools rel2kg materialize
+
+shacl: ## Validate kg.ttl against campus SHACL shapes
+	docker compose run --rm --build tools rel2kg shacl
 
 kg: bootstrap ## Start sources, then materialize the knowledge graph
 	docker compose run --rm --build tools rel2kg materialize

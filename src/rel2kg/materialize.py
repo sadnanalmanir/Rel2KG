@@ -161,6 +161,15 @@ def materialize(output: Path | None = None) -> int:
             print(f"  - {err}")
         return 1
 
+    from rel2kg.shacl import validate_graph
+
+    conforms, report, violations = validate_graph(graph)
+    if not conforms:
+        print(f"SHACL failed ({violations} results)")
+        print(report)
+        return 1
+
     print("R2RML mappings produced a consistent graph.")
+    print("Graph conforms to the campus SHACL shapes.")
     print(f"{INTEGRATED_PERSON_EMAIL} is a Person in HR, a borrower, and a student.")
     return 0

@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "rel2kg"
-version = "0.4.0"
-description = "Heterogeneous relational sources mapped to RDF, queried with SPARQL, shown on an integration desk."
+version = "0.5.0"
+description = "Heterogeneous relational sources mapped to RDF, constrained with SHACL, queried with SPARQL."
 readme = "README.md"
 license = { text = "Apache-2.0" }
 requires-python = ">=3.12"
@@ -13,6 +13,7 @@ authors = [{ name = "Rel2KG contributors" }]
 keywords = [
     "semantic-web",
     "r2rml",
+    "shacl",
     "sparql",
     "rdbms",
     "postgresql",
@@ -31,6 +32,7 @@ dependencies = [
     "psycopg2-binary==2.9.10",
     "PyMySQL==1.1.1",
     "morph-kgc[postgresql,mysql,sqlite]==2.10.0",
+    "pyshacl==0.30.1",
 ]
 
 [project.scripts]

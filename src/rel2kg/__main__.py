@@ -57,6 +57,20 @@ def build_parser() -> argparse.ArgumentParser:
     serve = sub.add_parser("serve", help="run the integration desk HTTP UI")
     serve.add_argument("--host", default=None, help="bind address (default 0.0.0.0)")
     serve.add_argument("--port", type=int, default=None, help="bind port (default 8765)")
+    shacl = sub.add_parser("shacl", help="validate the Turtle graph against campus SHACL shapes")
+    shacl.add_argument(
+        "-o",
+        "--output",
+        type=Path,
+        default=None,
+        help="Turtle graph to validate (default: $KG_OUTPUT)",
+    )
+    shacl.add_argument(
+        "--shapes",
+        type=Path,
+        default=None,
+        help="SHACL shapes file (default: shapes/campus.shacl.ttl)",
+    )
     return parser
 
 
@@ -93,6 +107,10 @@ def main(argv: list[str] | None = None) -> int:
         from rel2kg.desk import serve
 
         return serve(args.host, args.port)
+    if command == "shacl":
+        from rel2kg.shacl import validate_file
+
+        return validate_file(args.output, args.shapes)
 
     build_parser().print_help(sys.stderr)
     return 2

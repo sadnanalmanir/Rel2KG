@@ -37,6 +37,11 @@ class TestMain(unittest.TestCase):
         self.assertEqual(args.command, "serve")
         self.assertEqual(args.port, 8765)
 
+    def test_parser_accepts_shacl(self) -> None:
+        args = build_parser().parse_args(["shacl", "--shapes", "/app/shapes/campus.shacl.ttl"])
+        self.assertEqual(args.command, "shacl")
+        self.assertEqual(str(args.shapes), "/app/shapes/campus.shacl.ttl")
+
     def test_unknown_command_exits(self) -> None:
         with redirect_stderr(StringIO()), self.assertRaises(SystemExit) as cm:
             main(["nope"])

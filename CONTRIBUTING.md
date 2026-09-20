@@ -16,7 +16,7 @@ make bootstrap
 
 1. `make test` — unit tests in the tools image.
 2. `make bootstrap` (or `make verify` if the databases are already seeded).
-3. `make materialize` if you touched mappings, vocab, or seed data.
+3. `make materialize` (includes SHACL) if you touched mappings, vocab, shapes, or seed data.
 4. `make query` if you touched `queries/` or the graph.
 5. `make desk` if you touched `web/` or the desk API.
 6. `make lint` — Compose file plus Ruff.

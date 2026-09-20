@@ -121,6 +121,7 @@ db/mysql/init.sql      library schema + seed
 db/sqlite/init.sql     registrar schema + seed
 mappings/              R2RML Turtle, one file per database
 vocab/rel2kg.ttl       target RDFS vocabulary
+shapes/campus.shacl.ttl SHACL constraints
 queries/               SPARQL competency questions
 web/                   integration desk UI
 src/rel2kg/            CLI, connections, verify, materialize, SPARQL, desk
@@ -134,7 +135,8 @@ tests/                 unit tests (run in Docker)
 | `make help` | List targets |
 | `make bootstrap` | Start DBs, seed SQLite, print the report |
 | `make verify` | Re-run the report |
-| `make materialize` | Apply R2RML mappings, write Turtle |
+| `make materialize` | Apply R2RML mappings, write Turtle, run SHACL |
+| `make shacl` | Re-validate `kg.ttl` against campus shapes |
 | `make kg` | `bootstrap` then `materialize` |
 | `make load` | PUT the Turtle graph into Oxigraph |
 | `make query` | Run SPARQL competency questions |
@@ -212,8 +214,17 @@ Then open http://localhost:8765/
 
 A Person with all three chips is the integration working. Tim Berners-Lee and Codd only appear in the library.
 
+## SHACL
+
+`shapes/campus.shacl.ttl` constrains the mapped graph. Every Person must have `schema:email` and a `dcterms:source`. HR people (`rel2kg:hiredOn`) must also have names and a Department. Books, loans, courses, and enrollments have the obvious required links.
+
+```bash
+make shacl
+```
+
+`make materialize` runs the same check so a mapping bug fails before SPARQL.
+
 ## What is deliberately not here yet
 
-- SHACL shapes
 - Named graphs per source
 - Virtual SPARQL over the live tables (Ontop)

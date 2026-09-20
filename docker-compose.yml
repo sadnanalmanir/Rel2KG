@@ -88,6 +88,7 @@ services:
       SQL_DIR: /db
       MAPPINGS_DIR: /app/mappings
       VOCAB_PATH: /app/vocab/rel2kg.ttl
+      SHAPES_PATH: /app/shapes/campus.shacl.ttl
       KG_OUTPUT: /data/kg.ttl
       QUERIES_DIR: /app/queries
       WEB_DIR: /app/web
@@ -100,6 +101,7 @@ services:
       - ./db:/db:ro
       - ./mappings:/app/mappings:ro
       - ./vocab:/app/vocab:ro
+      - ./shapes:/app/shapes:ro
       - ./queries:/app/queries:ro
       - ./web:/app/web:ro
       - ./src:/app/src:ro

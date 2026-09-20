@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-09-20
+
+### Added
+
+- Campus SHACL shapes (`shapes/campus.shacl.ttl`)
+- `rel2kg shacl` via pySHACL; `materialize` fails if the graph does not conform
+
 ## [0.4.0] - 2026-09-19
 
 ### Added
