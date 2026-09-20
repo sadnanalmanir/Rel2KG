@@ -1,6 +1,6 @@
 PREFIX rel2kg: <https://rel2kg.example/vocab#>
 
-# Named graphs in the dataset. Expected: 4 (hr, library, registrar, vocab).
+# Named graphs in the dataset. Expected: 5 (hr, library, registrar, vocab, identity).
 
 SELECT DISTINCT ?g
 WHERE {

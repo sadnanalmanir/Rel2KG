@@ -1,0 +1,14 @@
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <https://schema.org/> .
+
+# Curated identity links. These are not minted from a join key.
+# Donald Knuth: campus HR email vs publisher email in the library.
+# Tim Berners-Lee and Codd have no campus counterpart (unlinked).
+
+<https://rel2kg.example/id/person/donald%40campus.example>
+    owl:sameAs <https://rel2kg.example/id/person/knuth%40taocp.example> ;
+    rdfs:comment "Same person; HR uses donald@campus.example, the library uses knuth@taocp.example." .
+
+<https://rel2kg.example/id/person/knuth%40taocp.example>
+    owl:sameAs <https://rel2kg.example/id/person/donald%40campus.example> .

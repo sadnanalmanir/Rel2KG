@@ -8,6 +8,7 @@ from rdflib import RDF, RDFS, Dataset, Graph, URIRef
 from rel2kg.config import (
     KG_NQUADS,
     KG_OUTPUT,
+    LINKS_PATH,
     MAPPINGS_DIR,
     MYSQL,
     POSTGRES,
@@ -23,14 +24,18 @@ from rel2kg.expected import (
     EXPECTED_NAMED_GRAPHS,
     EXPECTED_PERSON_COUNT,
     INTEGRATED_PERSON_EMAIL,
+    LINKED_CAMPUS_EMAIL,
+    LINKED_PUBLISHER_EMAIL,
 )
 from rel2kg.iris import (
     DCTERMS,
     FOAF,
     GRAPH_HR,
+    GRAPH_IDENTITY,
     GRAPH_LIBRARY,
     GRAPH_REGISTRAR,
     GRAPH_VOCAB,
+    OWL,
     SCHEMA,
     VOCAB,
     book_iri,
@@ -102,6 +107,7 @@ def _bind(graph: Graph) -> None:
     graph.bind("foaf", FOAF)
     graph.bind("schema", SCHEMA)
     graph.bind("dcterms", DCTERMS)
+    graph.bind("owl", OWL)
     graph.bind("rdfs", RDFS)
 
 
@@ -127,6 +133,9 @@ def materialize_dataset() -> Dataset:
     if VOCAB_PATH.is_file():
         vocab = dataset.graph(GRAPH_VOCAB)
         vocab.parse(VOCAB_PATH, format="turtle")
+    if LINKS_PATH.is_file():
+        identity = dataset.graph(GRAPH_IDENTITY)
+        identity.parse(LINKS_PATH, format="turtle")
     return dataset
 
 
@@ -172,7 +181,7 @@ def _check(graph: Graph, dataset: Dataset) -> list[str]:
         errors.append(f"{ada} is not enrolled in SEMWEB101")
 
     named = {ctx.identifier for ctx in dataset.contexts() if ctx.identifier}
-    for iri in (GRAPH_HR, GRAPH_LIBRARY, GRAPH_REGISTRAR, GRAPH_VOCAB):
+    for iri in (GRAPH_HR, GRAPH_LIBRARY, GRAPH_REGISTRAR, GRAPH_VOCAB, GRAPH_IDENTITY):
         if iri not in named:
             errors.append(f"missing named graph {iri}")
     campus_graphs = [iri for iri in named if str(iri).startswith("https://rel2kg.example/graph/")]
@@ -185,6 +194,16 @@ def _check(graph: Graph, dataset: Dataset) -> list[str]:
         errors.append("Ada is not typed Person in the library graph")
     if (ada, RDF.type, VOCAB.Person) not in dataset.graph(GRAPH_REGISTRAR):
         errors.append("Ada is not typed Person in the registrar graph")
+
+    campus = person_iri(LINKED_CAMPUS_EMAIL)
+    publisher = person_iri(LINKED_PUBLISHER_EMAIL)
+    identity = dataset.graph(GRAPH_IDENTITY)
+    if (campus, OWL.sameAs, publisher) not in identity:
+        errors.append("missing owl:sameAs from campus Knuth to publisher Knuth")
+    if (publisher, RDF.type, VOCAB.Person) not in dataset.graph(GRAPH_LIBRARY):
+        errors.append("publisher Knuth is not a Person in the library graph")
+    if (campus, RDF.type, VOCAB.Person) not in dataset.graph(GRAPH_HR):
+        errors.append("campus Knuth is not a Person in the HR graph")
 
     return errors
 
@@ -243,7 +262,7 @@ def materialize(output: Path | None = None) -> int:
         return 1
 
     print("R2RML mappings produced a consistent graph.")
-    print("Named graphs: hr, library, registrar, vocab.")
+    print("Named graphs: hr, library, registrar, vocab, identity.")
     print("Graph conforms to the campus SHACL shapes.")
     print(f"{INTEGRATED_PERSON_EMAIL} is a Person in HR, a borrower, and a student.")
     return 0

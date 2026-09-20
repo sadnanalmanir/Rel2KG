@@ -1,7 +1,7 @@
 PREFIX schema: <https://schema.org/>
 PREFIX rel2kg: <https://rel2kg.example/vocab#>
 
-# All people in the integrated graph. Expected: 7 emails.
+# All people in the integrated graph. Expected: 8 emails.
 
 SELECT ?email
 WHERE {

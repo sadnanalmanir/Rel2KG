@@ -25,7 +25,7 @@ GitHub Actions runs the same checks on `main` and on pull requests.
 
 ## Scope
 
-Keep the three schemas small. Person identity is email, expressed as `https://rel2kg.example/id/person/{email}` in every mapping. Do not replace Morph-KGC, Oxigraph, the integration desk, or the three databases.
+Keep the three schemas small. Person IRIs are minted from email. Different emails for the same person belong in `links/sameas.ttl`, not in a collapsed mapping. Do not replace Morph-KGC, Oxigraph, the integration desk, or the three databases.
 
 Read `AGENTS.md` before changing locked decisions (which databases, Docker-only, email as the join key).
 

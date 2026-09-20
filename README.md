@@ -20,7 +20,7 @@ They are the three most widely used open-source relational engines, and they dis
 | **MySQL 8.4** | Campus library (`library`) | `mysql:8.4` |
 | **SQLite 3** | Campus registrar (`courses.db`) | file on a Docker volume, created by the Python image |
 
-Same people, three schemas, three dialects. The join key is email, minted as `https://rel2kg.example/id/person/{email}` so the three sources describe one Person.
+Same people, three schemas, three dialects. Person IRIs are minted from email. Ada Lovelace uses the same email in every system (easy identity). Donald Knuth does not: HR has `donald@campus.example`, the library has `knuth@taocp.example`. Those IRIs are linked with `owl:sameAs` in `links/sameas.ttl`. Tim Berners-Lee and Codd have no campus counterpart.
 
 ## Schemas
 
@@ -183,11 +183,14 @@ Oxigraph serves SPARQL 1.1 over the materialized graph. Competency questions liv
 
 | Query | What it asks |
 | --- | --- |
-| `people.rq` | Every person email (7) |
+| `people.rq` | Every person email (8) |
 | `ada_across_sources.rq` | Ada in HR, library, and registrar (1 row) |
 | `ada_is_one_person.rq` | ASK: the same Person has all three `dcterms:source` values |
 | `ada_in_graphs.rq` | Graphs that mention Ada (3) |
-| `named_graphs.rq` | Named graphs in the dataset (4) |
+| `knuth_sameas.rq` | ASK: campus Knuth `owl:sameAs` publisher Knuth |
+| `knuth_across_sources.rq` | MATH department + TAOCP via `owl:sameAs` (1 row) |
+| `unlinked_authors.rq` | Library people with no HR link (TimBL, Codd) |
+| `named_graphs.rq` | Named graphs in the dataset (5) |
 | `open_loans.rq` | Unreturned loans (2) |
 | `cs_enrollments.rq` | CS staff who are also enrolled (5 rows) |
 | `class_counts.rq` | Instance counts per lab class (6 rows) |
@@ -214,7 +217,7 @@ Then open http://localhost:8765/
 - Person: Ada (by default) as three columns — PostgreSQL HR, MySQL library, SQLite registrar
 - Map: force layout of people, departments, books, and courses. Toggle `hr` / `library` / `registrar`. Edges are coloured by named graph. A white ring means the node appears in more than one graph. Click a person to open the card.
 
-A Person with all three chips is the integration working. Tim Berners-Lee and Codd only appear in the library.
+A Person with all three chips is the integration working. Ada is one IRI. Knuth is two IRIs plus `owl:sameAs` — the desk follows the link. Tim Berners-Lee and Codd stay library-only.
 
 ## SHACL
 
@@ -236,8 +239,11 @@ Each R2RML mapping writes into its own graph. The vocabulary sits in a fourth gr
 | `https://rel2kg.example/graph/library` | MySQL library |
 | `https://rel2kg.example/graph/registrar` | SQLite registrar |
 | `https://rel2kg.example/graph/vocab` | `vocab/rel2kg.ttl` |
+| `https://rel2kg.example/graph/identity` | `links/sameas.ttl` (`owl:sameAs`) |
 
-`named_graphs.rq` lists the four graphs. `ada_in_graphs.rq` asks which graphs mention Ada (HR, library, registrar). `make materialize` writes both `kg.ttl` (union) and `kg.nq` (dataset). `make load` PUTs the N-Quads file.
+`named_graphs.rq` lists the five graphs. `ada_in_graphs.rq` asks which graphs mention Ada (HR, library, registrar). Knuth needs `owl:sameAs` (`knuth_sameas.rq`, `knuth_across_sources.rq`). `make materialize` writes both `kg.ttl` (union) and `kg.nq` (dataset). `make load` PUTs the N-Quads file.
+
+Changing `db/mysql/init.sql` only applies on an empty volume: `make reset` then `make bootstrap`.
 
 ## What is deliberately not here yet
 

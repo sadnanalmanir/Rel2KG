@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-09-20
+
+### Added
+
+- Harder identity: Knuth has two emails / two Person IRIs linked by `owl:sameAs`
+- Identity named graph (`links/sameas.ttl`, `graph/identity`)
+- SPARQL tests `knuth_sameas.rq`, `knuth_across_sources.rq`, `unlinked_authors.rq`
+
+### Changed
+
+- Library author email for Knuth is `knuth@taocp.example` (no longer the campus address)
+
 ## [0.7.0] - 2026-09-20
 
 ### Added

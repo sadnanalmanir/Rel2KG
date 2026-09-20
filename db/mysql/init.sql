@@ -35,7 +35,7 @@ CREATE TABLE loan (
 
 INSERT INTO author (id, full_name, email) VALUES
     (1, 'Ada Lovelace',      'ada@campus.example'),
-    (2, 'Donald Knuth',      'donald@campus.example'),
+    (2, 'Donald Knuth',      'knuth@taocp.example'),
     (3, 'Tim Berners-Lee',   'timbl@w3.example'),
     (4, 'Edgar F. Codd',     'ted@rdbms.example');
 

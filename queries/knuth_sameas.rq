@@ -1,0 +1,11 @@
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX schema: <https://schema.org/>
+
+# Two email-IRIs for Donald Knuth, linked by owl:sameAs.
+# Expected: true.
+
+ASK {
+  ?campus schema:email "donald@campus.example" .
+  ?publisher schema:email "knuth@taocp.example" .
+  ?campus owl:sameAs|^owl:sameAs ?publisher .
+}

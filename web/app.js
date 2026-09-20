@@ -13,7 +13,7 @@ const graphToggles = document.getElementById("graph-toggles");
 
 let focusEmail = "ada@campus.example";
 let activeView = "person";
-let enabledGraphs = new Set(["hr", "library", "registrar"]);
+let enabledGraphs = new Set(["hr", "library", "registrar", "identity"]);
 let graphMap = null;
 
 function showBanner(text) {
@@ -82,12 +82,20 @@ function showView(name) {
 function renderPerson(card) {
   showView("person");
   document.getElementById("person-name").textContent = card.display;
-  document.getElementById("person-email").textContent = card.email;
+  const aliases = (card.aliases || []).join(", ");
+  document.getElementById("person-email").textContent = aliases
+    ? `${card.email} · sameAs ${aliases}`
+    : card.email;
   const flag = document.getElementById("person-flag");
-  flag.textContent = card.integrated
-    ? "One person · three sources"
-    : `Sources: ${card.sources.join(", ") || "none"}`;
-  flag.className = `flag ${card.integrated ? "good" : "warn"}`;
+  if (aliases) {
+    flag.textContent = "Two IRIs · owl:sameAs";
+    flag.className = "flag good";
+  } else {
+    flag.textContent = card.integrated
+      ? "One person · three sources"
+      : `Sources: ${card.sources.join(", ") || "none"}`;
+    flag.className = `flag ${card.integrated ? "good" : "warn"}`;
+  }
 
   const hr = card.hr.present
     ? dl([
@@ -105,8 +113,16 @@ function renderPerson(card) {
       return `<li>${loan.title} (${loan.loanedOn}${back})</li>`;
     })
     .join("");
+  const authored = (card.library.authored || [])
+    .map((book) => `<li>${book.title}</li>`)
+    .join("");
+  const libraryBits = [
+    card.library.name ? dl([["Author name", card.library.name]]) : "",
+    authored ? `<p class="hint">Authored</p><ul>${authored}</ul>` : "",
+    loans ? `<p class="hint">Loans</p><ul>${loans}</ul>` : "",
+  ].join("");
   const library = card.library.present
-    ? `${dl([["Author name", card.library.name]])}${loans ? `<p class="hint">Loans</p><ul>${loans}</ul>` : "<p class='empty'>No loans.</p>"}`
+    ? libraryBits || `<p class="empty">No library facts.</p>`
     : `<p class="empty">Not in the library.</p>`;
 
   const enrollments = (card.registrar.enrollments || [])
@@ -204,7 +220,9 @@ function describeNode(node) {
 }
 
 async function loadMap() {
-  const graphs = ["hr", "library", "registrar"].filter((name) => enabledGraphs.has(name));
+  const graphs = ["hr", "library", "registrar", "identity"].filter((name) =>
+    enabledGraphs.has(name)
+  );
   if (!graphs.length) {
     enabledGraphs.add("hr");
     graphs.push("hr");
@@ -243,7 +261,7 @@ document.querySelector(".views").addEventListener("click", (event) => {
 });
 
 if (graphToggles) {
-  graphToggles.innerHTML = ["hr", "library", "registrar"]
+  graphToggles.innerHTML = ["hr", "library", "registrar", "identity"]
     .map((name) => `<button type="button" class="${name} active" data-graph="${name}">${name}</button>`)
     .join("");
   graphToggles.addEventListener("click", (event) => {

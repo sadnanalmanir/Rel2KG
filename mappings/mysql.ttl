@@ -1,5 +1,6 @@
 # R2RML — MySQL campus library
-# author.email and loan.borrower_email reuse the Person IRI minted from email.
+# borrower_email still matches campus email. Author emails may differ
+# (Knuth is knuth@taocp.example in the library, donald@campus.example in HR).
 
 @prefix rr: <http://www.w3.org/ns/r2rml#> .
 @prefix foaf: <http://xmlns.com/foaf/0.1/> .

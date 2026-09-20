@@ -32,7 +32,7 @@ STATIC_FILES = {
     "/static/graph.js": "graph.js",
 }
 
-ALLOWED_MAP_GRAPHS = ("hr", "library", "registrar")
+ALLOWED_MAP_GRAPHS = ("hr", "library", "registrar", "identity")
 
 MIME = {
     ".html": "text/html; charset=utf-8",
@@ -101,6 +101,25 @@ def people_with_sources() -> list[dict[str, Any]]:
             grouped.setdefault(email, [])
             if source not in grouped[email]:
                 grouped[email].append(source)
+    link_rows = bindings_to_rows(
+        post_query(
+            """
+            PREFIX owl: <http://www.w3.org/2002/07/owl#>
+            PREFIX schema: <https://schema.org/>
+            SELECT ?email ?other WHERE {
+              ?a schema:email ?email .
+              ?a (owl:sameAs|^owl:sameAs) ?b .
+              ?b schema:email ?other .
+            }
+            """
+        )
+    )
+    for row in link_rows:
+        left, right = row["email"], row["other"]
+        if left in grouped and right in grouped:
+            for slug in grouped[right]:
+                if slug not in grouped[left]:
+                    grouped[left].append(slug)
     return [
         {
             "email": email,
@@ -112,8 +131,36 @@ def people_with_sources() -> list[dict[str, Any]]:
     ]
 
 
-def person_card(email: str) -> dict[str, Any]:
+def _identity_cluster(email: str) -> list[str]:
     quoted = _sparql_string(email)
+    rows = bindings_to_rows(
+        post_query(
+            f"""
+            PREFIX owl: <http://www.w3.org/2002/07/owl#>
+            PREFIX schema: <https://schema.org/>
+            SELECT DISTINCT ?email WHERE {{
+              ?seed schema:email {quoted} .
+              {{
+                BIND({quoted} AS ?email)
+              }} UNION {{
+                ?seed (owl:sameAs|^owl:sameAs)+ ?other .
+                ?other schema:email ?email .
+              }}
+            }}
+            """
+        )
+    )
+    found = [row["email"] for row in rows]
+    return found or [email]
+
+
+def _email_values(emails: list[str]) -> str:
+    return " ".join(_sparql_string(item) for item in emails)
+
+
+def person_card(email: str) -> dict[str, Any]:
+    cluster = _identity_cluster(email)
+    values = _email_values(cluster)
     core = post_query(
         f"""
         PREFIX foaf: <http://xmlns.com/foaf/0.1/>
@@ -122,7 +169,8 @@ def person_card(email: str) -> dict[str, Any]:
         PREFIX rel2kg: <https://rel2kg.example/vocab#>
         SELECT ?given ?family ?fullName ?hiredOn ?deptName ?deptCode ?source
         WHERE {{
-          ?person schema:email {quoted} .
+          VALUES ?em {{ {values} }}
+          ?person schema:email ?em .
           OPTIONAL {{ ?person foaf:givenName ?given }}
           OPTIONAL {{ ?person foaf:familyName ?family }}
           OPTIONAL {{ ?person foaf:name ?fullName }}
@@ -159,7 +207,8 @@ def person_card(email: str) -> dict[str, Any]:
             PREFIX schema: <https://schema.org/>
             PREFIX rel2kg: <https://rel2kg.example/vocab#>
             SELECT ?title ?isbn ?loanedOn ?returnedOn WHERE {{
-              ?person schema:email {quoted} .
+              VALUES ?em {{ {values} }}
+              ?person schema:email ?em .
               ?loan rel2kg:borrower ?person ;
                     rel2kg:borrowed ?book ;
                     rel2kg:loanedOn ?loanedOn .
@@ -171,13 +220,29 @@ def person_card(email: str) -> dict[str, Any]:
             """
         )
     )
+    authored = bindings_to_rows(
+        post_query(
+            f"""
+            PREFIX schema: <https://schema.org/>
+            SELECT ?title ?isbn WHERE {{
+              VALUES ?em {{ {values} }}
+              ?person schema:email ?em .
+              ?book schema:author ?person ;
+                    schema:name ?title .
+              OPTIONAL {{ ?book schema:isbn ?isbn }}
+            }}
+            ORDER BY ?title
+            """
+        )
+    )
     enrollments = bindings_to_rows(
         post_query(
             f"""
             PREFIX schema: <https://schema.org/>
             PREFIX rel2kg: <https://rel2kg.example/vocab#>
             SELECT ?title ?code ?term ?grade WHERE {{
-              ?person schema:email {quoted} .
+              VALUES ?em {{ {values} }}
+              ?person schema:email ?em .
               ?enrollment rel2kg:student ?person ;
                           rel2kg:course ?course ;
                           rel2kg:term ?term .
@@ -190,10 +255,11 @@ def person_card(email: str) -> dict[str, Any]:
         )
     )
     display = " ".join(part for part in (given, family) if part) or full_name or email
-    if loans and "library" not in sources:
+    if (loans or authored) and "library" not in sources:
         sources.append("library")
     if enrollments and "registrar" not in sources:
         sources.append("registrar")
+    aliases = [item for item in cluster if item != email]
     return {
         "ok": True,
         "email": email,
@@ -202,6 +268,7 @@ def person_card(email: str) -> dict[str, Any]:
         "given": given,
         "family": family,
         "full_name": full_name,
+        "aliases": aliases,
         "sources": sources,
         "integrated": set(sources) >= {"hr", "library", "registrar"},
         "hr": {
@@ -213,9 +280,10 @@ def person_card(email: str) -> dict[str, Any]:
             "code": dept_code,
         },
         "library": {
-            "present": "library" in sources or bool(loans),
+            "present": "library" in sources or bool(loans or authored),
             "name": full_name,
             "loans": loans,
+            "authored": authored,
         },
         "registrar": {
             "present": "registrar" in sources or bool(enrollments),
@@ -359,6 +427,37 @@ def map_graph(slugs: list[str]) -> dict[str, Any]:
             elif slug and slug not in nodes[iri]["graphs"]:
                 nodes[iri]["graphs"].append(slug)
         edges.append({"source": frm, "target": to, "kind": kind, "graph": slug})
+
+    if "identity" in slugs:
+        for row in bindings_to_rows(
+            post_query(
+                """
+                PREFIX owl: <http://www.w3.org/2002/07/owl#>
+                SELECT ?from ?to WHERE {
+                  GRAPH <https://rel2kg.example/graph/identity> {
+                    ?from owl:sameAs ?to .
+                  }
+                }
+                """
+            )
+        ):
+            frm, to = row["from"], row["to"]
+            key = (frm, to, "sameAs", "identity")
+            if key in seen_edges:
+                continue
+            seen_edges.add(key)
+            for iri in (frm, to):
+                if iri not in nodes:
+                    nodes[iri] = {
+                        "id": iri,
+                        "kind": "person",
+                        "label": iri.rsplit("/", 1)[-1],
+                        "email": "",
+                        "graphs": ["identity"],
+                    }
+                elif "identity" not in nodes[iri]["graphs"]:
+                    nodes[iri]["graphs"].append("identity")
+            edges.append({"source": frm, "target": to, "kind": "sameAs", "graph": "identity"})
 
     return {
         "ok": True,

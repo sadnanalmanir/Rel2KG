@@ -208,6 +208,7 @@ th { font-family: var(--mono); font-size: 11px; color: var(--muted); font-weight
 .modes button.hr.active { border-color: var(--hr); color: var(--hr); }
 .modes button.library.active { border-color: var(--lib); color: var(--lib); }
 .modes button.registrar.active { border-color: var(--reg); color: var(--reg); }
+.modes button.identity.active { border-color: #e8eef4; color: #e8eef4; }
 .meta { color: var(--muted); font-size: 13px; margin: 0; }
 .graph-body {
   display: grid;

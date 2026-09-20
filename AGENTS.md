@@ -11,6 +11,7 @@ Continue this repository. Do not start a different product.
 - Python 3.12, package under `src/rel2kg`, tests under `tests/`.
 - Seed row counts live in `src/rel2kg/expected.py` and must match `db/*/init.sql`.
 - Person IRIs are minted from **email** in every R2RML mapping (`https://rel2kg.example/id/person/{email}`).
+- When two systems use different emails for the same person, do not collapse them at mapping time. Link them with `owl:sameAs` in `links/sameas.ttl` (`graph/identity`). Ada is the easy same-email case; Knuth is the hard case.
 - Materialization uses **Morph-KGC** from the tools image. Do not add a second R2RML engine.
 - SPARQL is served by **Oxigraph** (`ghcr.io/oxigraph/oxigraph`). Competency questions in `queries/` are tests (`rel2kg query --check`).
 - The product UI is the **integration desk** (`web/`, `rel2kg serve`, Compose service `desk` on port 8765). It only reads SPARQL from Oxigraph. Do not add a second query engine.
@@ -26,6 +27,7 @@ Continue this repository. Do not start a different product.
 - `src/rel2kg/` — CLI, connections, verify report, R2RML materialize, SPARQL
 - `mappings/` — one R2RML Turtle file per database
 - `vocab/rel2kg.ttl` — small target vocabulary
+- `links/sameas.ttl` — curated owl:sameAs (named graph `identity`)
 - `shapes/campus.shacl.ttl` — SHACL constraints over the mapped graph
 - `queries/` — SPARQL competency questions
 - `web/` — integration desk static UI

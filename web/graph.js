@@ -11,6 +11,7 @@
     hr: "#3aa39a",
     library: "#d4923a",
     registrar: "#8b7cf0",
+    identity: "#e8eef4",
   };
   const RADIUS = {
     person: 14,

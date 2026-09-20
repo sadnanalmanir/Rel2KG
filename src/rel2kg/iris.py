@@ -11,6 +11,7 @@ VOCAB = Namespace(f"{BASE}vocab#")
 FOAF = Namespace("http://xmlns.com/foaf/0.1/")
 SCHEMA = Namespace("https://schema.org/")
 DCTERMS = Namespace("http://purl.org/dc/terms/")
+OWL = Namespace("http://www.w3.org/2002/07/owl#")
 RR = Namespace("http://www.w3.org/ns/r2rml#")
 
 SOURCE_HR = URIRef(f"{BASE}source/hr")
@@ -21,8 +22,15 @@ GRAPH_HR = URIRef(f"{BASE}graph/hr")
 GRAPH_LIBRARY = URIRef(f"{BASE}graph/library")
 GRAPH_REGISTRAR = URIRef(f"{BASE}graph/registrar")
 GRAPH_VOCAB = URIRef(f"{BASE}graph/vocab")
+GRAPH_IDENTITY = URIRef(f"{BASE}graph/identity")
 
-NAMED_GRAPHS: tuple[URIRef, ...] = (GRAPH_HR, GRAPH_LIBRARY, GRAPH_REGISTRAR, GRAPH_VOCAB)
+NAMED_GRAPHS: tuple[URIRef, ...] = (
+    GRAPH_HR,
+    GRAPH_LIBRARY,
+    GRAPH_REGISTRAR,
+    GRAPH_VOCAB,
+    GRAPH_IDENTITY,
+)
 
 
 def iri_safe(value: str) -> str:

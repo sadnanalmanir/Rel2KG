@@ -46,7 +46,7 @@ class TestDeskHelpers(unittest.TestCase):
         self.assertEqual(STATIC_FILES["/static/graph.js"], "graph.js")
 
     def test_parse_map_graphs(self) -> None:
-        self.assertEqual(parse_map_graphs(""), ["hr", "library", "registrar"])
+        self.assertEqual(parse_map_graphs(""), ["hr", "library", "registrar", "identity"])
         self.assertEqual(parse_map_graphs("hr"), ["hr"])
         self.assertEqual(parse_map_graphs("library,hr,library"), ["library", "hr"])
         with self.assertRaises(ValueError):

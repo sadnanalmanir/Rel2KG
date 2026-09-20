@@ -13,6 +13,7 @@ COPY src ./src
 COPY tests ./tests
 COPY mappings ./mappings
 COPY vocab ./vocab
+COPY links ./links
 COPY shapes ./shapes
 COPY queries ./queries
 COPY web ./web
