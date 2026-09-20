@@ -13,6 +13,7 @@ Continue this repository. Do not start a different product.
 - Person IRIs are minted from **email** in every R2RML mapping (`https://rel2kg.example/id/person/{email}`).
 - Materialization uses **Morph-KGC** from the tools image. Do not add a second R2RML engine.
 - SPARQL is served by **Oxigraph** (`ghcr.io/oxigraph/oxigraph`). Competency questions in `queries/` are tests (`rel2kg query --check`).
+- The product UI is the **integration desk** (`web/`, `rel2kg serve`, Compose service `desk` on port 8765). It only reads SPARQL from Oxigraph. Do not add a second query engine.
 
 ## Layout
 
@@ -23,12 +24,14 @@ Continue this repository. Do not start a different product.
 - `mappings/` — one R2RML Turtle file per database
 - `vocab/rel2kg.ttl` — small target vocabulary
 - `queries/` — SPARQL competency questions
-- `docker-compose.yml` — Postgres + MySQL + Oxigraph; `tools` profile for Python
+- `web/` — integration desk static UI
+- `docker-compose.yml` — Postgres + MySQL + Oxigraph + desk; `tools` profile for Python
 
 ## Next slices, in order
 
-1. A small desk UI over the competency questions (optional).
-2. Virtual SPARQL (Ontop) only if materialization is no longer enough.
+1. SHACL over the materialized graph.
+2. Named graphs per source (HR / library / registrar).
+3. Virtual SPARQL (Ontop) only if materialization is no longer enough.
 
 ## Do not
 

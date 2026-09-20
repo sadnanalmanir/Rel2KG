@@ -32,6 +32,11 @@ class TestMain(unittest.TestCase):
         args = build_parser().parse_args(["load"])
         self.assertEqual(args.command, "load")
 
+    def test_parser_accepts_serve(self) -> None:
+        args = build_parser().parse_args(["serve", "--port", "8765"])
+        self.assertEqual(args.command, "serve")
+        self.assertEqual(args.port, 8765)
+
     def test_unknown_command_exits(self) -> None:
         with redirect_stderr(StringIO()), self.assertRaises(SystemExit) as cm:
             main(["nope"])

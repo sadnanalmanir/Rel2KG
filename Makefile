@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help up bootstrap verify materialize kg load query sparql test lint config down reset
+.PHONY: help up bootstrap verify materialize kg load query sparql desk test lint config down reset
 
 help: ## Show available targets
 	@awk 'BEGIN {FS = ":.*##"} /^[a-zA-Z_-]+:.*##/ {printf "  %-12s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -32,6 +32,11 @@ sparql: kg ## Materialize, load Oxigraph, and check competency questions
 	docker compose up -d oxigraph
 	docker compose run --rm --build tools rel2kg load
 	docker compose run --rm --build tools rel2kg query --check
+
+desk: ## Load the graph and start the integration desk at :8765
+	docker compose up -d oxigraph
+	docker compose run --rm --build tools rel2kg load
+	docker compose up -d --build desk
 
 test: ## Unit tests inside the tools image
 	docker compose run --rm --build --no-deps tools python -m unittest discover -s /app/tests -v

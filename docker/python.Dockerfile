@@ -14,6 +14,7 @@ COPY tests ./tests
 COPY mappings ./mappings
 COPY vocab ./vocab
 COPY queries ./queries
+COPY web ./web
 
 RUN pip install --no-cache-dir -e .
 

@@ -26,7 +26,7 @@ jobs:
           args: format --check
 
   integration:
-    name: Databases, graph, and SPARQL
+    name: Databases, graph, SPARQL, and desk
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
@@ -47,6 +47,17 @@ jobs:
         run: |
           docker compose run --rm --build tools rel2kg load
           docker compose run --rm --build tools rel2kg query --check
+      - name: Start integration desk
+        run: docker compose up -d --build desk
+      - name: Desk health and Ada card
+        run: |
+          for i in $(seq 1 30); do
+            curl -sf http://127.0.0.1:8765/api/health && break
+            sleep 1
+          done
+          curl -sf http://127.0.0.1:8765/ | grep -q "Integration desk"
+          curl -sf http://127.0.0.1:8765/api/query/ada_is_one_person | grep -q '"boolean": true'
+          curl -sf "http://127.0.0.1:8765/api/person?email=ada@campus.example" | grep -q '"integrated": true'
       - name: Teardown
         if: always()
         run: docker compose down -v

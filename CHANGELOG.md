@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-09-19
+
+### Added
+
+- Integration desk UI (`make desk`, http://localhost:8765/)
+- Person card with HR / library / registrar columns
+- Desk API over the existing SPARQL competency questions
+
 ## [0.3.0] - 2026-09-19
 
 ### Added

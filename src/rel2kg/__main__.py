@@ -54,6 +54,9 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="fail if result sizes do not match expected.py",
     )
+    serve = sub.add_parser("serve", help="run the integration desk HTTP UI")
+    serve.add_argument("--host", default=None, help="bind address (default 0.0.0.0)")
+    serve.add_argument("--port", type=int, default=None, help="bind port (default 8765)")
     return parser
 
 
@@ -86,6 +89,10 @@ def main(argv: list[str] | None = None) -> int:
         from rel2kg.sparql import query
 
         return query(args.names, check=args.check)
+    if command == "serve":
+        from rel2kg.desk import serve
+
+        return serve(args.host, args.port)
 
     build_parser().print_help(sys.stderr)
     return 2

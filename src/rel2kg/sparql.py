@@ -114,6 +114,65 @@ def list_queries() -> list[Path]:
     return sorted(QUERIES_DIR.glob("*.rq"))
 
 
+def query_title(path: Path) -> str:
+    for line in path.read_text(encoding="utf-8").splitlines():
+        stripped = line.strip()
+        if stripped.startswith("#"):
+            title = stripped.lstrip("#").strip()
+            if title:
+                return title.split("Expected:")[0].strip().rstrip(".")
+    return path.stem.replace("_", " ")
+
+
+def query_catalog() -> list[dict[str, Any]]:
+    items: list[dict[str, Any]] = []
+    for path in list_queries():
+        kind = "ask" if path.stem in EXPECTED_ASK else "select"
+        items.append(
+            {
+                "name": path.stem,
+                "file": path.name,
+                "title": query_title(path),
+                "kind": kind,
+                "expected_rows": EXPECTED_SELECT_ROWS.get(path.stem),
+                "expected_ask": EXPECTED_ASK.get(path.stem),
+            }
+        )
+    return items
+
+
+def bindings_to_rows(payload: dict[str, Any]) -> list[dict[str, str]]:
+    rows: list[dict[str, str]] = []
+    for row in payload.get("results", {}).get("bindings", []):
+        rows.append({key: cell.get("value", "") for key, cell in row.items()})
+    return rows
+
+
+def run_named_query(name: str) -> dict[str, Any]:
+    path = resolve_query(name)
+    sparql = path.read_text(encoding="utf-8")
+    payload = post_query(sparql)
+    if "boolean" in payload:
+        return {
+            "ok": True,
+            "name": path.stem,
+            "kind": "ask",
+            "boolean": bool(payload["boolean"]),
+            "rows": [],
+            "sparql": sparql,
+        }
+    rows = bindings_to_rows(payload)
+    return {
+        "ok": True,
+        "name": path.stem,
+        "kind": "select",
+        "boolean": None,
+        "vars": payload.get("head", {}).get("vars", []),
+        "rows": rows,
+        "sparql": sparql,
+    }
+
+
 def _print_select(payload: dict[str, Any]) -> int:
     variables = payload.get("head", {}).get("vars", [])
     rows = payload.get("results", {}).get("bindings", [])

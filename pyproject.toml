@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "rel2kg"
-version = "0.3.0"
-description = "Heterogeneous relational sources mapped to RDF and queried with SPARQL."
+version = "0.4.0"
+description = "Heterogeneous relational sources mapped to RDF, queried with SPARQL, shown on an integration desk."
 readme = "README.md"
 license = { text = "Apache-2.0" }
 requires-python = ">=3.12"

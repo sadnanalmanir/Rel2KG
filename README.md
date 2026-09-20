@@ -6,7 +6,7 @@
 
 Relational tables, mapped to RDF with R2RML, queried with SPARQL.
 
-Three independently run campus systems store overlapping facts about the same people. This repository instantiates those systems with **Docker only** — nothing is installed on the host — maps them to a shared vocabulary, and serves SPARQL over Oxigraph.
+Three independently run campus systems store overlapping facts about the same people. This repository instantiates those systems with **Docker only** — nothing is installed on the host — maps them to a shared vocabulary, serves SPARQL over Oxigraph, and shows the join on an integration desk.
 
 Apache-2.0. Status: lab / alpha.
 
@@ -47,10 +47,12 @@ flowchart LR
   SL[(SQLite registrar)]
   MAP[R2RML mappings]
   OX[Oxigraph SPARQL]
+  DESK[Integration desk]
   PG --> MAP
   MY --> MAP
   SL --> MAP
   MAP --> OX
+  OX --> DESK
 ```
 
 ## Requirements
@@ -85,7 +87,7 @@ Or do both in one go: `make kg`. The Turtle graph is written to the `sqlite_data
 make sparql
 ```
 
-The SPARQL UI is at http://localhost:7878/
+The SPARQL UI is at http://localhost:7878/. The integration desk is at http://localhost:8765/ after `make desk`.
 
 ### Host ports and credentials
 
@@ -95,6 +97,7 @@ The SPARQL UI is at http://localhost:7878/
 | MySQL | `localhost:3306` | `mysql:3306` |
 | SQLite | volume `sqlite_data` → `/data/courses.db` | same path in `tools` |
 | Oxigraph | `localhost:7878` | `oxigraph:7878` |
+| Integration desk | `localhost:8765` | `desk:8765` |
 
 Lab credentials (see [SECURITY.md](SECURITY.md)): user `rel2kg`, password `rel2kg`. Copy `.env.example` to `.env` to change ports or passwords (`POSTGRES_HOST_PORT`, `MYSQL_HOST_PORT`).
 
@@ -119,7 +122,8 @@ db/sqlite/init.sql     registrar schema + seed
 mappings/              R2RML Turtle, one file per database
 vocab/rel2kg.ttl       target RDFS vocabulary
 queries/               SPARQL competency questions
-src/rel2kg/            CLI, connections, verify, materialize, SPARQL
+web/                   integration desk UI
+src/rel2kg/            CLI, connections, verify, materialize, SPARQL, desk
 tests/                 unit tests (run in Docker)
 ```
 
@@ -135,6 +139,7 @@ tests/                 unit tests (run in Docker)
 | `make load` | PUT the Turtle graph into Oxigraph |
 | `make query` | Run SPARQL competency questions |
 | `make sparql` | Materialize, load, and check SPARQL |
+| `make desk` | Load the graph and start the desk at :8765 |
 | `make test` | Unit tests in the tools image |
 | `make lint` | Compose validation + Ruff |
 | `make down` / `make reset` | Stop, or stop and delete volumes |
@@ -152,6 +157,8 @@ tests/                 unit tests (run in Docker)
 **Materialize cannot reach a database** — wait for `make bootstrap` (or `docker compose up -d --wait postgres mysql`) before `make materialize`.
 
 **Oxigraph is not reachable** — `make load` starts it. Open http://localhost:7878/ after a successful load. Change the host port with `OXIGRAPH_HOST_PORT` if 7878 is taken.
+
+**Desk shows an empty store** — run `make materialize` then `make desk` (or `make load` and refresh).
 
 ## Contributing
 
@@ -189,9 +196,24 @@ docker compose run --rm tools rel2kg query ada_across_sources
 
 Open http://localhost:7878/ for Oxigraph's SPARQL UI. The tools container talks to `http://oxigraph:7878`.
 
+## Integration desk
+
+The desk is the product view. It does not query the relational databases directly; it runs the same SPARQL files (and a person card) against Oxigraph.
+
+```bash
+make desk
+```
+
+Then open http://localhost:8765/
+
+- Left: every Person, with HR / library / registrar chips
+- Main: Ada (by default) as three columns — PostgreSQL HR, MySQL library, SQLite registrar
+- Competency questions: tables plus the SPARQL that produced them
+
+A Person with all three chips is the integration working. Tim Berners-Lee and Codd only appear in the library.
+
 ## What is deliberately not here yet
 
-- A custom web UI beyond Oxigraph's SPARQL page
-- Virtual SPARQL over the databases (Ontop); this lab materializes, then queries
-
-The graph is queryable. Federation or a nicer desk can come later.
+- SHACL shapes
+- Named graphs per source
+- Virtual SPARQL over the live tables (Ontop)

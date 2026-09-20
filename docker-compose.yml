@@ -90,13 +90,18 @@ services:
       VOCAB_PATH: /app/vocab/rel2kg.ttl
       KG_OUTPUT: /data/kg.ttl
       QUERIES_DIR: /app/queries
+      WEB_DIR: /app/web
       OXIGRAPH_URL: http://oxigraph:7878
+      OXIGRAPH_PUBLIC_URL: http://localhost:${OXIGRAPH_HOST_PORT:-7878}
+      DESK_HOST: 0.0.0.0
+      DESK_PORT: "8765"
     volumes:
       - sqlite_data:/data
       - ./db:/db:ro
       - ./mappings:/app/mappings:ro
       - ./vocab:/app/vocab:ro
       - ./queries:/app/queries:ro
+      - ./web:/app/web:ro
       - ./src:/app/src:ro
       - ./tests:/app/tests:ro
     depends_on:
@@ -109,6 +114,36 @@ services:
     command: ["rel2kg", "bootstrap"]
     profiles:
       - tools
+
+  desk:
+    build:
+      context: .
+      dockerfile: docker/python.Dockerfile
+    environment:
+      SQLITE_PATH: /data/courses.db
+      SQL_DIR: /db
+      MAPPINGS_DIR: /app/mappings
+      VOCAB_PATH: /app/vocab/rel2kg.ttl
+      KG_OUTPUT: /data/kg.ttl
+      QUERIES_DIR: /app/queries
+      WEB_DIR: /app/web
+      OXIGRAPH_URL: http://oxigraph:7878
+      OXIGRAPH_PUBLIC_URL: http://localhost:${OXIGRAPH_HOST_PORT:-7878}
+      DESK_HOST: 0.0.0.0
+      DESK_PORT: "8765"
+    ports:
+      - "${DESK_HOST_PORT:-8765}:8765"
+    volumes:
+      - sqlite_data:/data
+      - ./queries:/app/queries:ro
+      - ./web:/app/web:ro
+      - ./src:/app/src:ro
+    depends_on:
+      - oxigraph
+    init: true
+    logging: *default-logging
+    command: ["rel2kg", "serve", "--host", "0.0.0.0", "--port", "8765"]
+    restart: unless-stopped
 
 volumes:
   postgres_data:

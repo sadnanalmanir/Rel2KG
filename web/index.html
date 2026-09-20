@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Rel2KG integration desk</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <header class="top">
+    <div>
+      <p class="kicker">PostgreSQL · MySQL · SQLite → R2RML → SPARQL</p>
+      <h1>Integration desk</h1>
+      <p class="tagline">One Person IRI. Three campus systems. Disagreement would show up here.</p>
+    </div>
+    <div class="top-meta">
+      <div id="health" class="pill">store —</div>
+      <a id="oxigraph-link" class="quiet" href="http://localhost:7878/">Oxigraph SPARQL</a>
+    </div>
+  </header>
+
+  <main class="layout">
+    <aside class="rail">
+      <section>
+        <h2>People</h2>
+        <p class="hint">Chips are which sources described this email.</p>
+        <ul id="people" class="people"></ul>
+      </section>
+      <section>
+        <h2>Competency questions</h2>
+        <nav id="questions" class="questions" aria-label="SPARQL questions"></nav>
+      </section>
+    </aside>
+
+    <section class="stage">
+      <div id="view-person">
+        <header class="person-head">
+          <div>
+            <p class="kicker" id="person-kicker">Person</p>
+            <h2 id="person-name">Select a person</h2>
+            <p id="person-email" class="mono"></p>
+          </div>
+          <p id="person-flag" class="flag"></p>
+        </header>
+        <div id="sources" class="sources"></div>
+      </div>
+
+      <div id="view-query" class="hidden">
+        <header class="person-head">
+          <div>
+            <p class="kicker">Competency question</p>
+            <h2 id="query-name">Query</h2>
+            <p id="query-meta" class="hint"></p>
+          </div>
+          <p id="query-flag" class="flag"></p>
+        </header>
+        <div id="query-result"></div>
+        <details class="sparql">
+          <summary>SPARQL</summary>
+          <pre id="sparql"></pre>
+        </details>
+      </div>
+
+      <p id="banner" class="banner hidden"></p>
+    </section>
+  </main>
+  <script src="/static/app.js"></script>
+</body>
+</html>
