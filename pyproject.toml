@@ -30,7 +30,7 @@ classifiers = [
 ]
 dependencies = [
     "psycopg2-binary==2.9.10",
-    "PyMySQL==1.1.1",
+    "PyMySQL==1.2.3",
     "morph-kgc[postgresql,mysql,sqlite]==2.10.0",
     "pyshacl==0.30.1",
 ]
